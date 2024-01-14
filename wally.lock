@@ -40,4 +40,4 @@ dependencies = [["Promise", "evaera/promise@4.0.0"]]
 [[package]]
 name = "pichau/dangeroussky2"
 version = "0.1.0"
-dependencies = [["Replication", "ernisto/replication@0.1.2"], ["Replicator", "ernisto/replicator@0.1.4"], ["Wrapper", "ernisto/wrapper@0.4.1"]]
+dependencies = [["Replication", "ernisto/replication@0.1.2"], ["Replicator", "ernisto/replicator@0.1.4"], ["Signal", "ernisto/signal@0.1.1"], ["Wrapper", "ernisto/wrapper@0.4.1"]]
