@@ -1,1 +1,1 @@
-return require(script.Parent._Index["ernisto_replicator@0.1.4"]["replicator"])
+return require(script.Parent._Index["leonidiojose_replicator@1.0.1"]["replicator"])

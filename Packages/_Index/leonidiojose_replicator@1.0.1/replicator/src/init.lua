@@ -1,5 +1,5 @@
 --// Packages
-local wrapper = require(script.Parent.Parent.Wrapper)
+local wrapper = require(script.Parent.Wrapper)
 
 local RemoteSignal = require(script.RemoteSignal)
 type RemoteSignal = RemoteSignal.RemoteSignal
@@ -99,7 +99,7 @@ function Replicator.wrap(instance: Instance)
     ]=]
     function self:_function(name: string, callback: (player: Player, ...any) -> ...any)
         
-        local existingRemote = not query(instance, { Name = name, ClassName = "RemoteFunction" })
+        local existingRemote = query(instance, { Name = name, ClassName = "RemoteFunction" })
         if existingRemote then existingRemote.OnServerInvoke = callback; return end
         -- assert(not existingRemote, `a remote function '{name}' already has defined`)
         
