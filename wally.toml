@@ -5,7 +5,7 @@ registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 
 [dependencies]
-Replicator = "leonidiojose/replicator@1.0.1"
+Replicator = "leonidiojose/replicator@1.0.2"
 Replication = "ernisto/replication@0.1.2"
 Wrapper = "ernisto/wrapper@0.4.1"
 Signal = "ernisto/signal@0.1.1"

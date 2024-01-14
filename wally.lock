@@ -24,7 +24,7 @@ dependencies = []
 
 [[package]]
 name = "leonidiojose/replicator"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [["Signal", "ernisto/signal@0.1.1"], ["Wrapper", "ernisto/wrapper@0.4.1"]]
 
 [[package]]
@@ -35,4 +35,4 @@ dependencies = [["Promise", "evaera/promise@4.0.0"]]
 [[package]]
 name = "pichau/dangeroussky2"
 version = "0.1.0"
-dependencies = [["Replication", "ernisto/replication@0.1.2"], ["Replicator", "leonidiojose/replicator@1.0.1"], ["Signal", "ernisto/signal@0.1.1"], ["Wrapper", "ernisto/wrapper@0.4.1"]]
+dependencies = [["Replication", "ernisto/replication@0.1.2"], ["Replicator", "leonidiojose/replicator@1.0.2"], ["Signal", "ernisto/signal@0.1.1"], ["Wrapper", "ernisto/wrapper@0.4.1"]]
