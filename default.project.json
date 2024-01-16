@@ -16,6 +16,13 @@
       "$ignoreUnknownInstances": true
     },
 
+    "ServerStorage": {
+      "$ignoreUnknownInstances": true,
+      "Packages": {
+        "$path": "ServerPackages"
+      }
+    },
+
     "StarterPlayer": {
       "StarterPlayerScripts": {
         "$path": "src/client",
