@@ -1,9 +1,0 @@
-[package]
-name = "leonidiojose/replicator"
-version = "1.0.2"
-registry = "https://github.com/UpliftGames/wally-index"
-realm = "shared"
-
-[dependencies]
-Wrapper = "ernisto/wrapper@0.4.0"
-Signal = "ernisto/signal@0.1.1"
