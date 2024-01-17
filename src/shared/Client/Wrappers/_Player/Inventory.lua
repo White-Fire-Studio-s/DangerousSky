@@ -33,7 +33,9 @@ local InventoryScreenGui = Players.LocalPlayer.PlayerGui:WaitForChild("Inventory
 local InventoryBar = InventoryScreenGui:WaitForChild("Bar")
 
 --// Wrapper
-local function Inventory(container: Folder)    
+local Inventory = {}
+
+function Inventory.wrap(container: Folder)    
     local holder = Players.LocalPlayer
     local holderCharacter = holder.Character
     local holderHumanoid = holderCharacter:WaitForChild("Humanoid")

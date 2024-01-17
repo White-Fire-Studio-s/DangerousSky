@@ -1,4 +1,4 @@
-local Players = game:GetService("Players")
+--[[local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui")
 
@@ -11,4 +11,4 @@ warn('hello everyone')
 local inventory = require(ReplicatedStorage.Client.Factories.Inventory)
 local backpack = rbxPlayer:WaitForChild("Inventory")
 
-inventory(backpack)
+inventory(backpack)]]
