@@ -7,7 +7,9 @@ local ServerPackages = ServerStorage:WaitForChild("Packages")
 local Replicator = require(ServerPackages.Replicator)
 local wrapper = require(Packages.Wrapper)
 
-local function Inventory(container: Folder)
+local Inventory = {}
+
+function Inventory.wrap(container: Folder)
     local holder = container:FindFirstAncestorWhichIsA("Player") :: Player
     local holderCharacter = holder.CharacterAdded:Wait()
     local holderHumanoid = holderCharacter:WaitForChild("Humanoid")
@@ -34,6 +36,7 @@ local function Inventory(container: Folder)
 
     --// Methods
     function self:addItem(item: Tool)
+        
         if items[item] then return end
         if not item:IsA("Tool") then return end
         if not item:IsDescendantOf(holder) then return end
@@ -41,16 +44,16 @@ local function Inventory(container: Folder)
         items[item] = true;
         item.Destroying:Once(function() self:removeItem(item) end)
     end
-
     function self:removeItem(item: Tool)
+
         if not items[item] or not item:IsA("Tool") then
             return
         end
 
         items[item] = nil;
     end
-
     function self:equipItem(item: Tool)
+
         if not items[item] then
             return
         end
@@ -62,8 +65,8 @@ local function Inventory(container: Folder)
         item.Parent = holder.Character
         equippedItem = item
     end
-
     function self:unequipItem(item: Tool)
+        
         if not items[item] then
             return
         end

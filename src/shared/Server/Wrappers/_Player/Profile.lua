@@ -15,10 +15,19 @@ local wrapper = require(Packages.Wrapper)
 --// Constants
 local MOCK_ENABLED = true
 
+--// Functions
+local function isHash(hash)
+    return type(hash) == "table" and 
+    type(next(hash)) ~= "number" 
+end
+
 --// Profile
-local ProfileStore = ProfileService.GetProfileStore("userData", {
+local ProfileStore = ProfileService.GetProfileStore("_userData", {
     test = 5;
     test3 = 6;
+    a = {
+        b = 5;
+    }
 })
 if MOCK_ENABLED and RunService:IsStudio() then 
     ProfileStore = ProfileStore.Mock 
@@ -36,7 +45,7 @@ function Profile.wrap(container: Folder)
 
     profile:AddUserId(rbxPlayer.UserId)
     profile:Reconcile()
-    profile:ListenToRelease(function() rbxPlayer:Kick() end)
+    profile:ListenToRelease(function() warn(profile.Data) end)
 
     if not rbxPlayer:IsDescendantOf(Players) then
         profile:Release()
@@ -47,32 +56,42 @@ function Profile.wrap(container: Folder)
     profiles[rbxPlayer] = profile
 
     local self = wrapper(container)
-        :_syncAttributes(profile.Data)
-
+    for index, value in profile.Data do self[index] = value end
+  
     createSubContainers(self, profile.Data)
+
+    --// Listeners
+    container.AttributeChanged:Connect(function(attribute)
+        if isHash(profile.Data[attribute]) then
+            return
+        end
+
+        profile.Data[attribute] = self[attribute]
+    end)
 
     return self
 end
 
-local function createSubContainers(parent, data)
+function createSubContainers(parentWrapper, data)
     for index, value in data do
-        if 
-            type(value) == "table" and 
-            type(next(value)) == "string" 
-        then
-            parent[index] = Profile._wrapSubcontainer(index, value, parent)
+        if isHash(value) then
+            parentWrapper[index] = Profile._wrapSubcontainer(index, value, parentWrapper)
         end
     end
 end
 
-function Profile._wrapSubcontainer(name, value, parent)
-    local subContainerFolder = Instance.new("Folder", parent)
+function Profile._wrapSubcontainer(name, data, parentWrapper)
+    local subContainerFolder = Instance.new("Folder", parentWrapper.roblox)
     subContainerFolder.Name = name
 
     local self = wrapper(subContainerFolder)
-        :_syncAttributes(value)
+    for index, value in data do self[index] = value end
+        
+    createSubContainers(subContainerFolder, data)
 
-    createSubContainers(self, value)
+    subContainerFolder.AttributeChanged:Connect(function(attribute)
+        data[attribute] = self[attribute]
+    end)
 
     return self
 end
