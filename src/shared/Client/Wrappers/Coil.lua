@@ -19,6 +19,9 @@ local Coil = {}
 local coils = setmetatable({}, { __mode = "k"} )
 
 function Coil.wrap(item: Tool)
+    if not item:IsDescendantOf(rbxPlayer) then
+        return
+    end
     local self = wrapper(item)
 
     local defaultJumpPower = StarterPlayer.CharacterJumpPower

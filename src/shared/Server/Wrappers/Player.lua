@@ -55,7 +55,6 @@ function Player.wrap(rbxPlayer: Player)
                 :Clone() 
 
             coilContainer.Parent = inventoryContainer           
-            
             Coil.wrap(coilContainer, coilData)
         end
     end

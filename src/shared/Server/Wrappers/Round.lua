@@ -66,21 +66,20 @@ return function(container: Configuration, data)
         self.timer = self.timePerStage * self.stagesAmount
         self.timeDecrease = 1
 
-        self:resetPlayers()
         for _, stage in self.stages do
             stage:Destroy()
         end
 
         self.stages = table.create(self.stagesAmount)
 
-        --[[table.move(
+        table.move(
             stageSelector.unavailable.common,
             1,
             #stageSelector.unavailable.common,
             #stageSelector.available.common + 1,
             stageSelector.available.common
         )
-        ]]
+
         table.move(
             stageSelector.unavailable.secret,
             1,
@@ -89,9 +88,13 @@ return function(container: Configuration, data)
             stageSelector.available.secret
         )
 
+        table.clear(stageSelector.unavailable.common)
+        table.clear(stageSelector.unavailable.secret)
+
         table.clear(self.winners)
         self.winnersCount = 0
 
+        self:resetPlayers()
         self:start()
     end
     function self:startCountdown()
@@ -129,7 +132,9 @@ return function(container: Configuration, data)
             local unavailableStages = stageSelector.unavailable[stageBehavior]
 
             if #sample == 0 then
-                table.move(unavailableStages, 1, #unavailableStages, #sample + 1, sample)
+                for _, stage in unavailableStages do
+                    table.insert(sample, stage)
+                end
                 table.clear(unavailableStages)
             end
 

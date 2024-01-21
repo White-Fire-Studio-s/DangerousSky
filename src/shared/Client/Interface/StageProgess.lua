@@ -79,7 +79,7 @@ local function insertPlayer(rbxPlayer: Player)
 
         local rbxCharacter = rbxPlayer.Character
         if not rbxCharacter then return  end
-        if not rbxPlayer.PrimaryPart then return end
+        if not rbxCharacter.PrimaryPart then return end
 
         local firstStage = Stages.firstStage.Value
         local lastStage = Stages.lastStage.Value

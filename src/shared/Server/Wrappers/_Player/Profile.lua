@@ -38,6 +38,10 @@ return Entity.trait("Profile", function(self, rbxPlayer: Player)
     self.roblox.AttributeChanged:Connect(function(attribute: string)
          profile[attribute] = self[attribute] 
     end)
+
+    rbxPlayer.AncestryChanged:Connect(function()
+        profile:Release()
+    end)
     
     --// Functions
     local create;
