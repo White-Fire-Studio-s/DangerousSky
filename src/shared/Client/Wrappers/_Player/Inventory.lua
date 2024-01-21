@@ -2,6 +2,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContextActionSerivce = game:GetService("ContextActionService")
+local StarterGui = game:GetService("StarterGui")
 
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Assets = ReplicatedStorage:WaitForChild("Assets")
@@ -32,6 +33,7 @@ local EQUIPPED_SIZE = UDim2.fromScale(UNEQUIPPED_SIZE.X.Scale * 1.05, UNEQUIPPED
 local InventoryScreenGui = Players.LocalPlayer.PlayerGui:WaitForChild("Inventory")
 local InventoryBar = InventoryScreenGui:WaitForChild("Bar")
 
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 --// Wrapper
 local Inventory = {}
 
@@ -79,6 +81,14 @@ function Inventory.wrap(container: Folder)
         self:_host(holderHumanoid.Died:Connect(holderDied))
     end
 
+    local function lightenColor(color: Color3, fade: number)
+        local H, S, V = color:ToHSV()
+	
+	    V = math.clamp(V + fade, 0, 1)
+	
+	    return Color3.fromHSV(H, S, V)
+    end
+
     --// Methods
     function self:addItem(item: Tool)
         if items[item] or not item:IsA("Tool") then
@@ -110,6 +120,10 @@ function Inventory.wrap(container: Folder)
     
         slotInterface.ItemName.Visible = item.TextureId == ""
         slotInterface.ItemName.Text = item.Name
+
+        slotInterface.Border.UIStroke.Color = lightenColor(
+            item:WaitForChild("Handle").Color, 0.6
+        )
     
         slotInterface.MouseButton1Click:Connect(function()
             self:requestItemAction(item)

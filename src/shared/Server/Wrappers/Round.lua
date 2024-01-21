@@ -2,32 +2,53 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
+local Workspace = game:GetService("Workspace")
 
 --// Assets
 local Packages = ReplicatedStorage:WaitForChild("Packages")
+local Wrappers = ReplicatedStorage.Server:WaitForChild("Wrappers")
 local Stages = workspace:WaitForChild("Stages")
 local StagesStorage = ServerStorage:WaitForChild("StagesStorage")
 
 --// Imports
 local Wrapper = require(Packages.Wrapper)
 local Signal = require(Packages.Signal)
+local Profile = require(Wrappers._Player.Profile)
 
 --// Constants
 local STAGES_START_CFRAME = workspace:WaitForChild("StagesStart").CFrame
-local DEFAULT_STAGE_AMOUNT = 10
-local DEFAULT_TIME = 8 * 60
 
-local REASON = DEFAULT_TIME / DEFAULT_STAGE_AMOUNT
+
+local StageBehavior = table.freeze {
+    Common = "common";
+    Secret = "secret";
+}
 
 return function(container: Configuration, data)
     local self = Wrapper(container)
+        :_applyAttributes(data)
 
-    self.stagesAmount = data.stagesAmount or 10
-    self.secretStagesRatio = data.secretStagesRatio or 1/100
+    local stageSelector = {
+        available = {
+            common = StagesStorage.Common:GetChildren();
+            secret = StagesStorage.Secrets:GetChildren();
+        },
+        unavailable = {
+            common = {};
+            secret = {};
+        }
+    }
+
+    self.timePerStage =  self.defaultTime / self.stageAmount
+    warn(self.timePerStage)
+
     self.stages = table.create(self.stagesAmount)
     self.timeDecrease = 1
+    self.winnersCount = 0
+    self.roundsCount = 0
+    self.winners = setmetatable({}, { __mode = "k "})
 
-    local maxTimer = REASON * self.stagesAmount 
+    local maxTimer = self.timePerStage * self.stagesAmount
     self.timer = maxTimer
 
     --// Signals
@@ -35,18 +56,41 @@ return function(container: Configuration, data)
 
     --// Methods
     function self:start()
-
         self:addStages()
         self:startCountdown()
+
+        self.roundsCount += 1
     end
     function self:restart()
 
-        self.timer = REASON *self.stagesAmount
-        self.stages = table.create(self.stagesAmount)
+        self.timer = self.timePerStage * self.stagesAmount
         self.timeDecrease = 1
 
         self:resetPlayers()
-        Stages:ClearAllChildren()
+        for _, stage in self.stages do
+            stage:Destroy()
+        end
+
+        self.stages = table.create(self.stagesAmount)
+
+        --[[table.move(
+            stageSelector.unavailable.common,
+            1,
+            #stageSelector.unavailable.common,
+            #stageSelector.available.common + 1,
+            stageSelector.available.common
+        )
+        ]]
+        table.move(
+            stageSelector.unavailable.secret,
+            1,
+            #stageSelector.unavailable.secret,
+            #stageSelector.available.secret + 1,
+            stageSelector.available.secret
+        )
+
+        table.clear(self.winners)
+        self.winnersCount = 0
 
         self:start()
     end
@@ -54,49 +98,90 @@ return function(container: Configuration, data)
 
         self:_host(task.spawn(function()
             while self.timer > 0 do
-                task.wait(1)
+                task.wait(1/self.timeDecrease)
         
-                self.timer = math.max(0, self.timer - self.timeDecrease)
+                self.timer = math.max(0, self.timer - 1)
             end
 
             self.timerEnded:_tryEmit()
         end))
     end
-    function self:addStages(amount: number?)
+    function self:addStages(amountToAdd: number?)
 
-        amount = amount or self.stagesAmount
+        amountToAdd = amountToAdd or self.stagesAmount
 
         local stagesLength = #self.stages
-    
+
         local stageStart = if stagesLength > 0 
             then self.stages[stagesLength].End.CFrame
             else STAGES_START_CFRAME
+        
+        local lastStage
 
-            
-        for index = stagesLength + 1, stagesLength + amount do
+        for index = stagesLength + 1, stagesLength + amountToAdd do
+
             local isSecretStage = math.random() <= self.secretStagesRatio
-            local stagesFolder = if isSecretStage 
-                then StagesStorage.Secrets 
-                else StagesStorage.Common
-    
-            local stage = stagesFolder:GetChildren()[math.random(#stagesFolder:GetChildren())]:Clone()
+            local stageBehavior = if isSecretStage 
+                then StageBehavior.Secret
+                else StageBehavior.Common
+
+            local sample = stageSelector.available[stageBehavior]
+            local unavailableStages = stageSelector.unavailable[stageBehavior]
+
+            if #sample == 0 then
+                table.move(unavailableStages, 1, #unavailableStages, #sample + 1, sample)
+                table.clear(unavailableStages)
+            end
+
+            local randomNumber = math.random(1, #sample)
+            local stageTemplate = sample[randomNumber]
+
+            local stage = stageTemplate:Clone()
             stage.Parent = Stages
             stage:PivotTo(stageStart)
+            stage.Name = index
     
             self.stages[index] = stage
+
+            table.insert(unavailableStages, stageTemplate)
+            table.remove(sample, randomNumber)
+
+            lastStage = stage
             stageStart = stage.End.CFrame
         end
+
+        Stages.firstStage.Value = self.stages[1]
+        Stages.lastStage.Value = lastStage
+
+        Workspace.Finish:PivotTo(lastStage.End.CFrame)
     end
     function self:removeStages(amount: number)
         for _ = 1, amount do
             table.remove(self.stages):Destroy()
         end
-    end
 
+        local lastStage = self.stages[#self.stages]
+        Workspace.Finish:PivotTo(lastStage.End.CFrame)
+        Workspace.Stages.lastStage.Value = lastStage
+    end
     function self:resetPlayers()
+
         for _,rbxPlayer in Players:GetPlayers() do
             rbxPlayer:LoadCharacter()
         end
+    end
+    function self:winner(rbxPlayer: Player)
+        if self.winners[rbxPlayer] then
+            return
+        end
+        local playerProfile = Profile.get(rbxPlayer)
+        playerProfile.Clouds += 100
+
+        self.winners[rbxPlayer] = true
+        self.winnersCount += 1
+
+        self.timeDecrease = 2 ^ self.winnersCount
+        rbxPlayer:LoadCharacter()
     end
 
     self:listenChange("stagesAmount"):connect(function(newValue: number, lastValue: number)
@@ -106,8 +191,13 @@ return function(container: Configuration, data)
             self:addStages(newValue - lastValue)
         end
 
-        self.timer = math.floor(self.timer / maxTimer * REASON * self.stagesAmount)
-        maxTimer =  REASON * self.stagesAmount 
+        self.timer = math.floor(self.timer / maxTimer * self.timePerStage * self.stagesAmount)
+        maxTimer =  self.timePerStage * self.stagesAmount 
+    end)
+
+    local prompt = Workspace.Finish:FindFirstChild("ProximityPrompt", true)
+    prompt.Triggered:Connect(function(rbxPlayer: Players)
+        self:winner(rbxPlayer)
     end)
 
     return self

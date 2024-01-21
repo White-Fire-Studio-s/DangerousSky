@@ -2,7 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 for _, feature in ReplicatedStorage.Server:GetChildren() do
     if feature:IsA("ModuleScript") then
-        require(feature)
+        task.spawn(require, feature)
     end
 end
 

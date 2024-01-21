@@ -1,103 +1,70 @@
 --// Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
 --// Assets
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local ServerPackages = ServerStorage:WaitForChild("Packages")
+local Configuration = ReplicatedStorage:WaitForChild("Configuration")
 
 --// Imports
 local ProfileService = require(ServerPackages.ProfileService)
+local ProfileSettings = require(Configuration.Profile)
+
 local wrapper = require(Packages.Wrapper)
-
---// Constants
-local MOCK_ENABLED = true
-
---// Functions
-local function isHash(hash)
-    return type(hash) == "table" and 
-    type(next(hash)) ~= "number" 
-end
+local Entity = require(Packages.Entity)
 
 --// Profile
-local ProfileStore = ProfileService.GetProfileStore("_userData", {
-    test = 5;
-    test3 = 6;
-    a = {
-        b = 5;
-    }
-})
-if MOCK_ENABLED and RunService:IsStudio() then 
-    ProfileStore = ProfileStore.Mock 
+local ProfileStore = ProfileService.GetProfileStore("_userData", ProfileSettings.Scheme)
+if ProfileSettings.Mock then ProfileStore = ProfileStore.Mock end
+
+local function isDict(data)
+    return type(data) == "table" and type(next(data)) == "string"
 end
 
-local Profile = {}
-
-local profiles = setmetatable({}, { __mode = "k" })
-local createSubContainers;
-
-function Profile.wrap(container: Folder)
-    local rbxPlayer = container:FindFirstAncestorOfClass("Player")
+return Entity.trait("Profile", function(self, rbxPlayer: Player)
+    --// Load Profile
     local profile = ProfileStore:LoadProfileAsync(`id_{rbxPlayer.UserId}`)
     if not profile then return rbxPlayer:Kick() end
 
     profile:AddUserId(rbxPlayer.UserId)
     profile:Reconcile()
-    profile:ListenToRelease(function() warn(profile.Data) end)
+    profile:ListenToRelease(function() rbxPlayer:Kick(); warn(profile.Data) end)
 
-    if not rbxPlayer:IsDescendantOf(Players) then
-        profile:Release()
+    if not rbxPlayer:IsDescendantOf(Players) then return profile:Release() end
 
-        return 
-    end
-
-    profiles[rbxPlayer] = profile
-
-    local self = wrapper(container)
-    for index, value in profile.Data do self[index] = value end
-  
-    createSubContainers(self, profile.Data)
-
-    --// Listeners
-    container.AttributeChanged:Connect(function(attribute)
-        if isHash(profile.Data[attribute]) then
-            return
-        end
-
-        profile.Data[attribute] = self[attribute]
+    self:_applyAttributes(profile.Data)
+    self.roblox.AttributeChanged:Connect(function(attribute: string)
+         profile[attribute] = self[attribute] 
     end)
-
-    return self
-end
-
-function createSubContainers(parentWrapper, data)
-    for index, value in data do
-        if isHash(value) then
-            parentWrapper[index] = Profile._wrapSubcontainer(index, value, parentWrapper)
-        end
-    end
-end
-
-function Profile._wrapSubcontainer(name, data, parentWrapper)
-    local subContainerFolder = Instance.new("Folder", parentWrapper.roblox)
-    subContainerFolder.Name = name
-
-    local self = wrapper(subContainerFolder)
-    for index, value in data do self[index] = value end
+    
+    --// Functions
+    local create;
+    local function wrap(name: string, data: { [string]: any }, parent: Folder)
         
-    createSubContainers(subContainerFolder, data)
+        local subContainer = Instance.new("ObjectValue", parent.roblox)
+        subContainer.Name = name;
 
-    subContainerFolder.AttributeChanged:Connect(function(attribute)
-        data[attribute] = self[attribute]
-    end)
+        local self = wrapper(subContainer)
+        self:_applyAttributes(data)
 
-    return self
-end
+        subContainer.AttributeChanged:Connect(function(attribute: string)
+            data[attribute] = self[attribute] 
+        end)
 
-function Profile.get(rbxPlayer: Player)
-    return profiles[rbxPlayer]
-end
+       create(self, data)
 
-return Profile
+       return self
+    end
+    function create(parentWrapper: wrapper.wrapper<Folder>, data: { [string]: any })
+
+        for index, value in data do
+            if isDict(value) then
+                parentWrapper[index] = wrap(index, value, parentWrapper)
+            end
+        end
+    end
+
+    create(self, profile.Data)
+end)

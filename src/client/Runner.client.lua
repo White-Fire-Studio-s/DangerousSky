@@ -4,6 +4,6 @@ ReplicatedStorage.Server:Destroy()
 
 for _, feature in ReplicatedStorage.Client:GetChildren() do
     if feature:IsA("ModuleScript") then
-        require(feature)
+        task.spawn(require, feature)
     end
 end
