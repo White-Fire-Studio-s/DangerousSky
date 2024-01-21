@@ -30,7 +30,7 @@ return Entity.trait("Profile", function(self, rbxPlayer: Player)
 
     profile:AddUserId(rbxPlayer.UserId)
     profile:Reconcile()
-    profile:ListenToRelease(function() rbxPlayer:Kick(); warn(profile.Data) end)
+    profile:ListenToRelease(function() rbxPlayer:Kick() end)
 
     if not rbxPlayer:IsDescendantOf(Players) then return profile:Release() end
 

@@ -40,7 +40,6 @@ return function(container: Configuration, data)
     }
 
     self.timePerStage =  self.defaultTime / self.stageAmount
-    warn(self.timePerStage)
 
     self.stages = table.create(self.stagesAmount)
     self.timeDecrease = 1

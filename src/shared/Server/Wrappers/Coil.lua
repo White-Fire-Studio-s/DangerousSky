@@ -36,9 +36,6 @@ function Coil.wrap(item: Tool, data)
         self:startHealing()
 
         if self.HealIncrease > 0 and not healsConnections[rbxHumanoid] then
-            
-            warn(self.HealIncrease)
-
             local connection = rbxHumanoid.HealthChanged:Connect(function() self:startHealing() end)  
             healsConnections[rbxHumanoid] = connection          
         end
