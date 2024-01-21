@@ -14,13 +14,15 @@ local Stages = Workspace.Stages
 
 local frames = {}
 
-local function updateColors()
-    for frame in frames do
-        frame:Destroy()
-        frames[frame] = nil
-    end
+local oldStageAmount = RoundContainer:GetAttribute("stagesAmount")
 
+local function updateColors()
     local stagesAmount = RoundContainer:GetAttribute("stagesAmount")
+    if stagesAmount < oldStageAmount then
+        for _ = 1, oldStageAmount - stagesAmount do
+            table.remove(frames):Destroy()
+        end
+    end
 
     if Stages.lastStage.Value.Name ~= tostring(stagesAmount) then
         Stages.lastStage.Changed:Wait()
@@ -46,14 +48,17 @@ local function updateColors()
         local stage = Stages:WaitForChild(tostring(index)) :: Model
         local stageColor = stage:GetAttribute("baseColor")
 
-        local frame = Instance.new("Frame")
+        local frame = frames[index] or Instance.new("Frame")
         frame.LayoutOrder = index
         frame.BackgroundColor3 = stageColor
         frame.BorderSizePixel = 0
-        frame.Parent = StageProgess
         frame.Size = getSize(stage)
-        frames[frame] = true
+        frame.Parent = StageProgess
+        
+        frames[index] = frame
     end
+
+    oldStageAmount = stagesAmount
 end
 
 local function insertPlayer(rbxPlayer: Player)
