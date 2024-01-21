@@ -17,7 +17,7 @@ return {
         MaxSpeedIncrease = 0;
         MaxJumpIncrease = 22;
         MaxJumps = 0;
-        MaxHealIncrease = 9;
+        MaxHealIncrease = 0;
         MaxLevel = 10;
     };
     HealCoil = {

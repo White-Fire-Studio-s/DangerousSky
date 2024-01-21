@@ -84,7 +84,7 @@ function Coil.wrap(item: Tool)
 
         local currentTime = os.clock()
         local elapsedTime = currentTime - lastJumpRequestTime
-        if elapsedTime < 0.1 then return end
+        if elapsedTime < 0.2 then return end
 
         if rbxHumanoid:GetState() ~= Enum.HumanoidStateType.Freefall then
             return

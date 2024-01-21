@@ -55,14 +55,11 @@ function Inventory.wrap(container: Folder)
     local function setupInputs()
         local function bindAction(_,inputState: Enum.UserInputState, key: InputObject)
             if inputState ~= Enum.UserInputState.End then return end
-            if os.clock() - leastKeyPressedTime < 0.1 then return end
         
             local itemSlot = slots[key.KeyCode.Value - 48]
             local item = itemSlot._item
             
             self:requestItemAction(item)
-    
-            leastKeyPressedTime = os.clock()
         end
         
         ContextActionSerivce:BindAction("KeyInputs",
@@ -78,6 +75,9 @@ function Inventory.wrap(container: Folder)
             equippedItem = nil
         end
 
+        local holderCharacter = holder.CharacterAdded:Wait()
+        holderHumanoid = holder:WaitForChild("Humanoid")
+        
         self:_host(holderHumanoid.Died:Connect(holderDied))
     end
 
@@ -164,6 +164,10 @@ function Inventory.wrap(container: Folder)
     function self:requestItemAction(item: Tool)
         local itemSlot = slots[self:getItemStot(item)]
         local itemSlotInterface = itemSlot._interface
+        if os.clock() - leastKeyPressedTime < 0.2 then return end
+        if holderHumanoid:GetState() == Enum.HumanoidStateType.Dead then
+            return
+        end
 
         if equippedItem and equippedItem ~= item then
             local equippedItemSlot = slots[self:getItemStot(equippedItem)]
@@ -182,6 +186,8 @@ function Inventory.wrap(container: Folder)
         server:invokeUnequipItemAsync(item)
         itemSlotInterface.Size = UNEQUIPPED_SIZE
         equippedItem = nil
+
+        leastKeyPressedTime = os.clock()
     end
 
     function self:getItemStot(item: Tool)

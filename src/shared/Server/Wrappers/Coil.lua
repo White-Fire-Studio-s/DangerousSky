@@ -12,7 +12,8 @@ local wrapper = require(Packages.Wrapper)
 local Coil = {}
 
 --// Cache
-local coils = setmetatable({}, { __mode = "k"} )
+local coils = setmetatable({}, { __mode = "k" })
+local healsConnections = setmetatable({}, { __mode = "k" })
 
 function Coil.wrap(item: Tool, data)
 
@@ -34,13 +35,24 @@ function Coil.wrap(item: Tool, data)
         local rbxHumanoid = rbxPlayer.Character:WaitForChild("Humanoid")
         self:startHealing()
 
-        rbxHumanoid.HealthChanged:Connect(function() self:startHealing() end)
+        if self.HealIncrease > 0 and not healsConnections[rbxHumanoid] then
+            
+            warn(self.HealIncrease)
+
+            local connection = rbxHumanoid.HealthChanged:Connect(function() self:startHealing() end)  
+            healsConnections[rbxHumanoid] = connection          
+        end
     end
 
     function self:disable()
-        if healingThread then
+        local rbxHumanoid = rbxPlayer.Character:WaitForChild("Humanoid")
+
+        if healsConnections[rbxHumanoid] and healingThread then
             task.cancel(healingThread)
             healingThread = nil
+
+            healsConnections[rbxHumanoid]:Disconnect()
+            healsConnections[rbxHumanoid] = nil
         end
     end
 
@@ -51,11 +63,14 @@ function Coil.wrap(item: Tool, data)
     end
     function self:startHealing()
 
-        if healingThread or self.HealIncrease == 0 then
+        if healingThread then
             return     
         end
 
         local holderHumanoid = rbxPlayer.Character:WaitForChild("Humanoid")
+        if holderHumanoid.Health == holderHumanoid.MaxHealth then
+            return
+        end
 
         healingThread = task.spawn(function()
             while 
@@ -69,8 +84,6 @@ function Coil.wrap(item: Tool, data)
      
              healingThread = nil
         end)
-
-        self:_host(healingThread)
     end
 
     --// Listeners

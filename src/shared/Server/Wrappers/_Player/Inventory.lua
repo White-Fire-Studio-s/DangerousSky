@@ -23,8 +23,9 @@ function Inventory.wrap(container: Folder)
     local equippedItem: Tool
 
     local function holderDied()
-        if equippedItem then
-            equippedItem.Parent = container
+        local item = holderCharacter:FindFirstAncestorOfClass("Tool")
+        if item then
+            item.Parent = container
             equippedItem = nil
         end
 
@@ -58,6 +59,10 @@ function Inventory.wrap(container: Folder)
             return
         end
 
+        if holderHumanoid:GetState() == Enum.HumanoidStateType.Dead then
+            return
+        end
+
         if equippedItem and equippedItem ~= item then
             self:unequipItem(equippedItem)
         end
@@ -68,6 +73,10 @@ function Inventory.wrap(container: Folder)
     function self:unequipItem(item: Tool)
         
         if not items[item] then
+            return
+        end
+
+        if holderHumanoid:GetState() == Enum.HumanoidStateType.Dead then
             return
         end
 
