@@ -119,6 +119,7 @@ return function(container: Configuration, data)
             else STAGES_START_CFRAME
         
         local lastStage
+        local lastStageTemplate
 
         for index = stagesLength + 1, stagesLength + amountToAdd do
 
@@ -129,11 +130,11 @@ return function(container: Configuration, data)
 
             local sample = stageSelector.available[stageBehavior]
             local unavailableStages = stageSelector.unavailable[stageBehavior]
+            local hasSample = #sample > 0
 
-            if #sample == 0 then
-                for _, stage in unavailableStages do
-                    table.insert(sample, stage)
-                end
+            if not hasSample then
+                table.remove(unavailableStages, table.find(unavailableStages, lastStageTemplate))
+                table.move(unavailableStages, 1, #unavailableStages, 1, sample)
                 table.clear(unavailableStages)
             end
 
@@ -151,11 +152,13 @@ return function(container: Configuration, data)
     
             self.stages[index] = stage
 
+            if not hasSample then table.insert(sample, lastStageTemplate) end
             table.insert(unavailableStages, stageTemplate)
             table.remove(sample, randomNumber)
 
             lastStage = stage
             stageStart = stage.End.CFrame
+            lastStageTemplate = stageTemplate
         end
 
         Stages.firstStage.Value = self.stages[1]
