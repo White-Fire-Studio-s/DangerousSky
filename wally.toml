@@ -9,6 +9,7 @@ Replication = "ernisto/replication@0.1.3"
 Wrapper = "ernisto/wrapper@0.4.2"
 Signal = "ernisto/signal@0.1.1"
 Entity = "ernisto/entity@0.2.1"
+Zone = "mattschrubb/zoneplus@3.2.0"
 
 [server-dependencies]
 Replicator = "ernisto/replicator@0.2.3"

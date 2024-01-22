@@ -44,12 +44,14 @@ function Coil.wrap(item: Tool, data)
     function self:disable()
         local rbxHumanoid = rbxPlayer.Character:WaitForChild("Humanoid")
 
-        if healsConnections[rbxHumanoid] and healingThread then
-            task.cancel(healingThread)
-            healingThread = nil
-
+        warn(healingThread)
+        if healsConnections[rbxHumanoid] then
             healsConnections[rbxHumanoid]:Disconnect()
             healsConnections[rbxHumanoid] = nil
+        end
+
+        if healingThread then
+            task.cancel(healingThread)
         end
     end
 

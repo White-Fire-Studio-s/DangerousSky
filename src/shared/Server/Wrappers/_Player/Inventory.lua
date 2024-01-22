@@ -1,3 +1,4 @@
+local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -23,10 +24,8 @@ function Inventory.wrap(container: Folder)
     local equippedItem: Tool
 
     local function holderDied()
-        local item = holderCharacter:FindFirstAncestorOfClass("Tool")
-        if item then
-            item.Parent = container
-            equippedItem = nil
+        for _, coil in CollectionService:GetTagged(`item_{holder.Name}`) do
+            coil.Parent = container
         end
 
         holderCharacter = holder.CharacterAdded:Wait()
@@ -43,6 +42,7 @@ function Inventory.wrap(container: Folder)
         if not item:IsDescendantOf(holder) then return end
 
         items[item] = true;
+        item:AddTag(`item_{holder.Name}`)
         item.Destroying:Once(function() self:removeItem(item) end)
     end
     function self:removeItem(item: Tool)

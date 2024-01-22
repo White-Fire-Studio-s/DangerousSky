@@ -143,7 +143,11 @@ return function(container: Configuration, data)
             local stage = stageTemplate:Clone()
             stage.Parent = Stages
             stage:PivotTo(stageStart)
+
+            stage:SetAttribute("name", stage.Name)
             stage.Name = index
+
+            stage:AddTag("stage")
     
             self.stages[index] = stage
 
