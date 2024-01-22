@@ -9,8 +9,8 @@ local PlayerGui = Players.LocalPlayer.PlayerGui
 local MainScreen = PlayerGui:WaitForChild("Main")
 local StageInfo = MainScreen:WaitForChild("StageInfo")
 
---[[local StageName = StageInfo:WaitForChild("StageName")
-local StageOwners = StageInfo:WaitForChild("StageOwner")]]
+local StageName = StageInfo:WaitForChild("StageName")
+local StageOwners = StageInfo:WaitForChild("StageOwners")
 
 --// Assets
 local Packages = ReplicatedStorage:WaitForChild("Packages")
@@ -23,6 +23,7 @@ local Zone = require(Packages.Zone)
 local TWEEN_INFO = TweenInfo.new(0.5, Enum.EasingStyle.Quint)
 local FADED = { GroupTransparency = 1 }
 local SHOWN = { GroupTransparency = 0 }
+
 local REGION_MULTIPLIER = Vector3.new(3, 10, 1)
 
 --// Tweens
@@ -45,13 +46,13 @@ end)
 --// Module
 local Stage = {}
 
-function Stage.wrap(stageContainer: Model)
-    local self = Wrapper(stageContainer)
-    local stageCFrame, stageSize = stageContainer:GetBoundingBox()
+function Stage.wrap(stageModel: Model)
+    local self = Wrapper(stageModel)
+    local stageCFrame, stageSize = stageModel:GetBoundingBox()
     if stageSize == Vector3.zero then
         task.wait()
 
-        stageCFrame, stageSize = stageContainer:GetBoundingBox()
+        stageCFrame, stageSize = stageModel:GetBoundingBox()
     end
 
     stageSize *= REGION_MULTIPLIER
@@ -61,9 +62,9 @@ function Stage.wrap(stageContainer: Model)
     local function showStageInformation()
         shown:Play()
 
-        StageInfo.StageName.Text = self.name
-        StageInfo.StageName.TextColor3 = self.baseColor
-        StageInfo.StageOwner.Text = `by {self.owners or "unknown"}`
+        StageName.Text = self.name
+        StageName.TextColor3 = self.baseColor
+        StageOwners.Text = `by {self.owners or "unknown"}`
     end
 
     local entered = stageZone.localPlayerEntered:Connect(showStageInformation)

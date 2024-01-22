@@ -142,7 +142,6 @@ return function(container: Configuration, data)
             local stageTemplate = sample[randomNumber]
 
             local stage = stageTemplate:Clone()
-            stage.Parent = Stages
             stage:PivotTo(stageStart)
 
             stage:SetAttribute("name", stage.Name)
@@ -150,6 +149,8 @@ return function(container: Configuration, data)
 
             stage:AddTag("stage")
     
+            stage.Parent = Stages
+            
             self.stages[index] = stage
 
             if not hasSample then table.insert(sample, lastStageTemplate) end
