@@ -18,6 +18,8 @@ local INCREASE_TWEENINFO = TweenInfo.new(0.2, Enum.EasingStyle.Quint)
 local buttonGroups = setmetatable({}, {
     __index = function(self: { [string]: { [Button]: boolean } }, groupName: string)
         self[groupName] = setmetatable({}, { __mode = "k" })
+
+        return self[groupName]
     end
 })
 

@@ -17,6 +17,8 @@ local FRAME_TWEENINFO = TweenInfo.new(0.5, Enum.EasingStyle.Quint)
 local shownFrames = setmetatable({}, {
     __index = function(self, groupName: string)
         self[groupName] = setmetatable({}, { __mode = "k" })
+
+        return self[groupName]
     end
 })
 
