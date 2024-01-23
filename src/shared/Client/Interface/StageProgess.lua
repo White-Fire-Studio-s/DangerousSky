@@ -9,6 +9,7 @@ local PlayerGui = Players.LocalPlayer.PlayerGui
 local MainScreen = PlayerGui:WaitForChild("Main")
 local Top = MainScreen:WaitForChild("Top")
 local StageProgess = Top:WaitForChild("StageProgress")
+local StageProgessPlayers = Top:WaitForChild("StageProgressPlayers")
 
 local Stages = Workspace.Stages
 
@@ -62,14 +63,14 @@ local function updateColors()
 end
 
 local function insertPlayer(rbxPlayer: Player)
-    local template = StageProgess.Players.Template:Clone()
+    local template = StageProgessPlayers.Template:Clone()
 
     local playerImage = Players:GetUserThumbnailAsync(rbxPlayer.UserId,
         Enum.ThumbnailType.HeadShot,
         Enum.ThumbnailSize.Size180x180
     )
 
-    template.Parent = StageProgess.Players
+    template.Parent = StageProgessPlayers
     template.Background.Player.Image = playerImage
     template.Visible = true
 
@@ -90,11 +91,11 @@ local function insertPlayer(rbxPlayer: Player)
         local lastStage = Stages.lastStage.Value
 
         if not lastStage:FindFirstChild("Start") then
-            return
+            return warn("a")
         end
 
         if not lastStage:FindFirstChild("End") then
-            return
+            return warn("b")
         end
 
         local start: Vector3 = firstStage.Start.Position
