@@ -14,6 +14,10 @@ local Inventory = require(Wrappers._Player.Inventory)
 local wrapper = require(Packages.Wrapper)
 local Coil = require(Wrappers.Coil)
 
+task.defer(function()
+    require(Interface.Components.Button)
+end)
+
 --// Player
 local Player = {}
 
@@ -37,6 +41,10 @@ function Player.wrap(rbxPlayer: Player)
 
     function self:loadInterface()
         for _, interface in Interface:GetChildren() do
+            if not interface:IsA("ModuleScript") then
+                continue
+            end
+
             require(interface)()
         end
     end
