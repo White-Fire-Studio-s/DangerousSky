@@ -1,8 +1,8 @@
 --// Services
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerStorage = game:GetService("ServerStorage")
 
+-->>
 --// Assets
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Client = ReplicatedStorage:WaitForChild("Client")
@@ -12,10 +12,12 @@ local Interface = Client:WaitForChild("Interface")
 --// Imports
 local Inventory = require(Wrappers._Player.Inventory)
 local wrapper = require(Packages.Wrapper)
+local Profile = require(Wrappers._Player.Profile)
 local Coil = require(Wrappers.Coil)
 
 task.defer(function()
     require(Interface.Components.Button)
+    require(Wrappers._Player.Profile)
 end)
 
 --// Player
@@ -29,7 +31,8 @@ function Player.wrap(rbxPlayer: Player)
     end
 
     local self = wrapper(rbxPlayer)
-    self.Inventory = Inventory.wrap(rbxPlayer:WaitForChild("Inventory"))
+    self.Inventory = Inventory.wrap(rbxPlayer:WaitForChild("Inventory") :: Folder)
+    self.Profile = Profile.get(rbxPlayer)
 
     function self:loadCoils()
         for _, coil in CollectionService:GetTagged("Coil") do

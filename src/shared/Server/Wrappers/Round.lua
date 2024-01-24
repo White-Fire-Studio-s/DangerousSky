@@ -14,6 +14,7 @@ local StagesStorage = ServerStorage:WaitForChild("StagesStorage")
 local Wrapper = require(Packages.Wrapper)
 local Signal = require(Packages.Signal)
 local Profile = require(Wrappers._Player.Profile)
+local Inventory = require(Wrappers._Player.Inventory)
 
 --// Constants
 local STAGES_START_CFRAME = workspace:WaitForChild("StagesStart").CFrame
@@ -39,6 +40,8 @@ return function(container: Configuration, data)
         }
     }
 
+    local roundStart
+
     self.timePerStage =  self.defaultTime / self.stageAmount
 
     self.stages = table.create(self.stagesAmount)
@@ -59,8 +62,11 @@ return function(container: Configuration, data)
         self:startCountdown()
 
         self.roundsCount += 1
+        roundStart = os.clock()
     end
     function self:restart()
+
+        local roundEnded = os.clock()
 
         self.timer = self.timePerStage * self.stagesAmount
         self.timeDecrease = 1
@@ -133,7 +139,6 @@ return function(container: Configuration, data)
             local hasSample = #sample > 0
 
             if not hasSample then
-                table.remove(unavailableStages, table.find(unavailableStages, lastStageTemplate))
                 table.move(unavailableStages, 1, #unavailableStages, 1, sample)
                 table.clear(unavailableStages)
             end
@@ -141,10 +146,15 @@ return function(container: Configuration, data)
             local randomNumber = math.random(1, #sample)
             local stageTemplate = sample[randomNumber]
 
-            local stage = stageTemplate:Clone()
+            local stage = stageTemplate:Clone() :: Model
             stage:PivotTo(stageStart)
 
             stage:SetAttribute("name", stage.Name)
+            stage:SetAttribute("start", stage.Start.Position)
+            stage:SetAttribute("end", stage.End.Position)
+
+            stage.ModelStreamingMode = Enum.ModelStreamingMode.Nonatomic
+
             stage.Name = index
 
             stage:AddTag("stage")
@@ -153,17 +163,16 @@ return function(container: Configuration, data)
             
             self.stages[index] = stage
 
-            if not hasSample then table.insert(sample, lastStageTemplate) end
             table.insert(unavailableStages, stageTemplate)
             table.remove(sample, randomNumber)
 
             lastStage = stage
             stageStart = stage.End.CFrame
-            lastStageTemplate = stageTemplate
         end
 
-        Stages.firstStage.Value = self.stages[1]
-        Stages.lastStage.Value = lastStage
+        Stages:SetAttribute("start", self.stages[1].Start.Position)
+        Stages:SetAttribute("end", lastStage.End.Position)
+        Stages:SetAttribute("amount", #self.stages)
 
         Workspace.Finish:PivotTo(lastStage.End.CFrame)
     end
@@ -174,11 +183,20 @@ return function(container: Configuration, data)
 
         local lastStage = self.stages[#self.stages]
         Workspace.Finish:PivotTo(lastStage.End.CFrame)
-        Workspace.Stages.lastStage.Value = lastStage
-    end
-    function self:resetPlayers()
 
-        for _,rbxPlayer in Players:GetPlayers() do
+        Stages:SetAttribute("end", lastStage.End.Position)
+        Stages:SetAttribute("amount", #self.stages)
+    end
+    function self:resetPlayers(players: {Players}?)
+        players = players or Players:GetPlayers()
+
+        for _,rbxPlayer in players do
+            local playerInventory = Inventory.get(rbxPlayer)
+            local item = rbxPlayer.Character:FindFirstChildOfClass("Tool")
+            if item then
+                playerInventory:unequipItem(item)
+            end
+
             rbxPlayer:LoadCharacter()
         end
     end
@@ -188,12 +206,19 @@ return function(container: Configuration, data)
         end
         local playerProfile = Profile.get(rbxPlayer)
         playerProfile.Clouds += 100
+        playerProfile.Statistics.Wins += 1
 
         self.winners[rbxPlayer] = true
         self.winnersCount += 1
 
+        local completionTime = os.clock() - roundStart
+
+        if playerProfile.Statistics.BestTime > completionTime  then
+            playerProfile.Statistics.BestTime = completionTime
+        end
+
         self.timeDecrease = 2 ^ self.winnersCount
-        rbxPlayer:LoadCharacter()
+        self:resetPlayers({ rbxPlayer })
     end
 
     self:listenChange("stagesAmount"):connect(function(newValue: number, lastValue: number)

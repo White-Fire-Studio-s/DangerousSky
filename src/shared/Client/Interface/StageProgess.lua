@@ -23,24 +23,24 @@ local function updateColors()
         for _ = 1, oldStageAmount - stagesAmount do
             table.remove(frames):Destroy()
         end
+
+        warn("REMOVED STAGES")
     end
 
-    if Stages.lastStage.Value.Name ~= tostring(stagesAmount) then
-        Stages.lastStage.Changed:Wait()
+    if Stages:GetAttribute("amount") ~= stagesAmount then
+        Stages:GetAttributeChangedSignal("amount"):Wait()
     end
 
-    local firstStage = Stages.firstStage.Value
-    local lastStage = Stages.lastStage.Value
+    local start: Vector3 = Stages:GetAttribute("start")
+    local finish: Vector3 = Stages:GetAttribute("end")
 
-    local start: Vector3 = firstStage:WaitForChild("Start").Position
-    local finish: Vector3 = lastStage:WaitForChild("End").Position
     local totalDistance: number = (finish - start).Magnitude
 
     local function getSize(stage)
-        local start = stage:WaitForChild("Start")
-        local _end = stage:WaitForChild("End")
+        local start = stage:GetAttribute("start")
+        local _end = stage:GetAttribute("end")
 
-        local distance = (_end.Position - start.Position).Magnitude
+        local distance = (_end - start).Magnitude
 
         return UDim2.fromScale(distance / totalDistance, 1)
     end
@@ -58,6 +58,7 @@ local function updateColors()
         
         frames[index] = frame
     end
+
 
     oldStageAmount = stagesAmount
 end
@@ -87,19 +88,12 @@ local function insertPlayer(rbxPlayer: Player)
         if not rbxCharacter then return  end
         if not rbxCharacter.PrimaryPart then return end
 
-        local firstStage = Stages.firstStage.Value
-        local lastStage = Stages.lastStage.Value
+        local start: Vector3 = Stages:GetAttribute("start")
+        local finish: Vector3 = Stages:GetAttribute("end")
 
-        if not lastStage:FindFirstChild("Start") then
-            return warn("a")
+        if not (start or finish) then
+            return
         end
-
-        if not lastStage:FindFirstChild("End") then
-            return warn("b")
-        end
-
-        local start: Vector3 = firstStage.Start.Position
-        local finish: Vector3 = lastStage.End.Position
 
         local totalDistance: number = (finish - start).Magnitude
 

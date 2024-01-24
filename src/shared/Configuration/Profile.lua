@@ -1,6 +1,12 @@
 return {
     Scheme = {
         Clouds = 0; --> Currency
+        Statistics = {
+            Deaths = 0;
+            Wins = 0;
+            BestTime = 8 * 60;
+            TimePlayed = 0;
+        };
         Coils = {
             FusionCoil = { Obtained = true, Level = 10 };
             GravityCoil = { Obtained = true, Level = 10 };

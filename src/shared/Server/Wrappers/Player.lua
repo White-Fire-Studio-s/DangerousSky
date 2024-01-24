@@ -35,13 +35,16 @@ function Player.wrap(rbxPlayer: Player)
     inventoryContainer.Name = "Inventory"
 
     local self = wrapper(rbxPlayer)
+    --// Fields
     self.Inventory = Inventory.wrap(inventoryContainer)
     self.Profile = Profile.get(rbxPlayer)
 
     self.isPrivateServerMod = false
     self.isDeveloper = table.find(DEVS_IDS, rbxPlayer.UserId) ~= nil
     self.isPrivateServerOwner = game.PrivateServerOwnerId == rbxPlayer.UserId
+    self.playerJoinedAt = os.clock()
 
+    --// Methods
     function self:loadCoils()
         for coilName: string, coilData in CoilsConfiguration do
             local coilProfile = self.Profile.Coils[coilName]
@@ -68,8 +71,39 @@ function Player.wrap(rbxPlayer: Player)
         Player.wrap(rbxPlayer) --> Kick;
     end
     
+    --// Callers
     self:loadCoils()
+    self:cleaner(function()
+        self.Profile.Statistics.TimePlayed += os.clock() - self.playerJoinedAt
+    end)
 
+    --// Death handler
+    local function handleDeath(character: Model)
+        if not character then
+            return
+        end
+
+        character.Archivable = true
+
+        local humanoid = character:WaitForChild("Humanoid")
+
+        local function onDeath()
+            self.Profile.Statistics.Deaths += 1
+    
+            rbxPlayer.CharacterAdded:Wait()
+
+            local humanoid = rbxPlayer.Character:WaitForChild("Humanoid")
+    
+            self:_host(humanoid.Died:Connect(onDeath))
+        end
+
+        self:_host(humanoid.Died:Connect(onDeath))
+    end
+
+    handleDeath(rbxPlayer.Character)
+    rbxPlayer.CharacterAdded:Connect(handleDeath)
+
+    --// Cache
     players[rbxPlayer] = self
 
     return self

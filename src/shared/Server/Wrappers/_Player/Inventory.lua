@@ -10,6 +10,7 @@ local wrapper = require(Packages.Wrapper)
 
 local Inventory = {}
 
+local inventories = setmetatable({}, { __mode = "k" })
 function Inventory.wrap(container: Folder)
     local holder = container:FindFirstAncestorWhichIsA("Player") :: Player
     local holderCharacter = holder.CharacterAdded:Wait()
@@ -43,7 +44,7 @@ function Inventory.wrap(container: Folder)
 
         items[item] = true;
         item:AddTag(`item_{holder.Name}`)
-        item.Destroying:Once(function() self:removeItem(item) end)
+        self:_host(item.Destroying:Once(function() self:removeItem(item) end))
     end
     function self:removeItem(item: Tool)
 
@@ -93,7 +94,13 @@ function Inventory.wrap(container: Folder)
     self:_host(container.ChildAdded:Connect(function(item) self:addItem(item) end))
     self:_host(holderHumanoid.Died:Connect(holderDied))
 
+    inventories[holder] = self
+
     return self
+end
+
+function Inventory.get(rbxPlayer: Player)
+    return inventories[rbxPlayer]
 end
 
 return Inventory

@@ -1,12 +1,12 @@
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
 
 --// Assets
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
 --// Imports
-local wrapper = require(Packages.Wrapper)
 local Entity = require(Packages.Entity)
 local Frame = require(script.Parent.Frame)
 
@@ -15,14 +15,6 @@ local DECREASE_TWEENINFO = TweenInfo.new(0.1, Enum.EasingStyle.Quint, Enum.Easin
 local INCREASE_TWEENINFO = TweenInfo.new(0.2, Enum.EasingStyle.Quint)
 
 --// Cache
-local buttonGroups = setmetatable({}, {
-    __index = function(self: { [string]: { [Button]: boolean } }, groupName: string)
-        self[groupName] = setmetatable({}, { __mode = "k" })
-
-        return self[groupName]
-    end
-})
-
 type Button = TextButton | ImageButton
 
 return Entity.trait("button", function(self, button: Button)
@@ -48,6 +40,8 @@ return Entity.trait("button", function(self, button: Button)
         if os.clock() - leastClick <= .2 then
             return
         end
+
+        Workspace.Sounds.Click:Play()
 
         --// Button Tween
         clickTween:Play()

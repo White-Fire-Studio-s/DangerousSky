@@ -37,6 +37,12 @@ StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 --// Wrapper
 local Inventory = {}
 
+local localPlayerInventory
+
+function Inventory.get()
+    return localPlayerInventory
+end
+
 function Inventory.wrap(container: Folder)    
     local holder = Players.LocalPlayer
     local holderCharacter = holder.Character
@@ -75,7 +81,6 @@ function Inventory.wrap(container: Folder)
             equippedItem = nil
         end
 
-        local holderCharacter = holder.CharacterAdded:Wait()
         holderHumanoid = holder:WaitForChild("Humanoid")
         
         self:_host(holderHumanoid.Died:Connect(holderDied))
@@ -122,7 +127,7 @@ function Inventory.wrap(container: Folder)
         slotInterface.ItemName.Text = item.Name
 
         slotInterface.Border.UIStroke.Color = lightenColor(
-            item:WaitForChild("Handle").Color, 0.6
+            (item:WaitForChild("Handle") :: BasePart ).Color, 0.6
         )
     
         slotInterface.MouseButton1Click:Connect(function()
@@ -196,6 +201,8 @@ function Inventory.wrap(container: Folder)
                 return slot
             end
         end
+
+        return
     end
 
     --//
@@ -205,6 +212,8 @@ function Inventory.wrap(container: Folder)
     for _, item in container:GetChildren() do self:addItem(item) end
     self:_host(container.ChildAdded:Connect(function(item) self:addItem(item) end))
     self:_host(holderHumanoid.Died:Connect(holderDied))
+
+    localPlayerInventory = self
 
     return self
 end

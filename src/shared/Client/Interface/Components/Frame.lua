@@ -7,7 +7,6 @@ local TweenService = game:GetService("TweenService")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
 --// Imports
-local wrapper = require(Packages.Wrapper)
 local Entity = require(Packages.Entity)
 
 --// Constants

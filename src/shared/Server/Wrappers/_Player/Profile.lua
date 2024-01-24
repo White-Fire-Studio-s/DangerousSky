@@ -14,6 +14,7 @@ local ProfileSettings = require(Configuration.Profile)
 
 local wrapper = require(Packages.Wrapper)
 local Entity = require(Packages.Entity)
+local Signal = require(Packages.Signal)
 
 --// Profile
 local ProfileStore = ProfileService.GetProfileStore("_userData", ProfileSettings.Scheme)
@@ -28,9 +29,13 @@ return Entity.trait("Profile", function(self, rbxPlayer: Player)
     local profile = ProfileStore:LoadProfileAsync(`id_{rbxPlayer.UserId}`)
     if not profile then return rbxPlayer:Kick() end
 
+    self.isLoading = true
+    
+    local releaseSignal = Signal.new("profileReleased")
+
     profile:AddUserId(rbxPlayer.UserId)
     profile:Reconcile()
-    profile:ListenToRelease(function() rbxPlayer:Kick() end)
+    profile:ListenToRelease(function() releaseSignal:_tryEmit(); rbxPlayer:Kick() end)
 
     if not rbxPlayer:IsDescendantOf(Players) then return profile:Release() end
 
@@ -42,10 +47,15 @@ return Entity.trait("Profile", function(self, rbxPlayer: Player)
     rbxPlayer.AncestryChanged:Connect(function()
         profile:Release()
     end)
+
+    --// Methods
+    function self:listenToRelease(callback)
+        releaseSignal:once(callback)
+    end
     
     --// Functions
     local create;
-    local function wrap(name: string, data: { [string]: any }, parent: Folder)
+    local function wrap(name: string, data: { [string]: any }, parent)
         
         local subContainer = Instance.new("ObjectValue", parent.roblox)
         subContainer.Name = name;
@@ -61,7 +71,7 @@ return Entity.trait("Profile", function(self, rbxPlayer: Player)
 
        return self
     end
-    function create(parentWrapper: wrapper.wrapper<Folder>, data: { [string]: any })
+    function create(parentWrapper, data: { [string]: any })
 
         for index, value in data do
             if isDict(value) then
@@ -71,4 +81,7 @@ return Entity.trait("Profile", function(self, rbxPlayer: Player)
     end
 
     create(self, profile.Data)
+
+    self.isLoading = false
+    return
 end)
