@@ -15,6 +15,10 @@ return {
             SuperCoil = { Obtained = true, Level = 1 };
             SuperSpeedCoil = { Obtained = true, Level = 10 };
             AirCoil = { Obtained = true, Level = 1 };
+        };
+        Settings = {
+            Music = 1;
+            SFX = 1;
         }
     };
     Mock = true

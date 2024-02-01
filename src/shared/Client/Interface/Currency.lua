@@ -24,13 +24,13 @@ local function setCurrency(amount: number)
     local tween = TweenService:Create(tweenHandler, tweenInfo, {
         Value = amount
     })
-
+    
     tween:Play()
     tween.Completed:Once(function(playbackState)
         if playbackState == Enum.PlaybackState.Cancelled then
             return
         end
-
+        
         CurrencyLabel.Text = formatNumber(tweenHandler.Value)
     end)
 end
@@ -42,6 +42,6 @@ end)
 --// Init
 return function ()
     setCurrency(playerProfile.Clouds)
-
+    
     playerProfile:listenChange("Clouds"):connect(setCurrency)
 end

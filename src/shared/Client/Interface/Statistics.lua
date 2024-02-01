@@ -16,25 +16,25 @@ local CHARACTER_CFRAME = CFrame.new(Vector3.new(-0, 1.5, 24.12)) * CFrame.Angles
 local formatNumber = require(ReplicatedStorage.NumberFormatter)
 
 local function convertToHours(amount: number)
-
+    
     return `{math.floor(amount / 36)/100}h`
 end
 
 local function convertTime(amount: number)
-
+    
     local minutes = math.floor(amount / 60)
     local seconds = amount % 60
     local _,miliseconds = math.modf(amount)
-
+    
     miliseconds = math.round(miliseconds * 100)
-
+    
     return string.format("%.2i:%.2i:%0.2i", minutes, seconds, miliseconds)
 end
 
 local function setStatistic(profile, statistic: string, formatter: (number) -> string)
     
     local value = profile.Statistics[statistic]
-
+    
     Stats[statistic].Value.Label.Text = formatter(value)
 end
 
@@ -43,7 +43,7 @@ local function setUserStatistic()
     if not rbxCharacter.Archivable then
         rbxCharacter:GetPropertyChangedSignal("Archivable"):Wait()
     end
-
+    
     local characterClone = Players.LocalPlayer.Character:Clone()
     characterClone:PivotTo(CHARACTER_CFRAME)
     for _, descendant: BasePart in characterClone:GetDescendants() do
@@ -52,7 +52,7 @@ local function setUserStatistic()
         end
     end
     characterClone.Parent = StatisticsMain.User.Image.Viewport
-
+    
     StatisticsMain.User.PlayerID.Text = `UserID: {Players.LocalPlayer.UserId}`
     StatisticsMain.User.PlayerName.Text = Players.LocalPlayer.Name
 end 
@@ -60,7 +60,7 @@ end
 return function()
     task.wait(.2)
     setUserStatistic()
-
+    
     local statisticsFormatter = {
         Wins = formatNumber;
         Deaths = formatNumber;
@@ -68,10 +68,10 @@ return function()
         TimePlayed = convertToHours
     }
     local playerProfile = Profile.get(Players.LocalPlayer)
-
+    
     for statistic, formatter in statisticsFormatter do
         setStatistic(playerProfile, statistic, formatter)
-
+        
         playerProfile.Statistics:listenChange(statistic):connect(function()
             setStatistic(playerProfile, statistic, formatter)
         end)

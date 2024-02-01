@@ -1,6 +1,6 @@
 --// Services
-local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
 --// Assets
 local Packages = ReplicatedStorage:WaitForChild("Packages")
@@ -10,6 +10,7 @@ local Wrappers = ReplicatedStorage:WaitForChild("Server")
 
 --// Imports
 local Inventory = require(Wrappers._Player.Inventory)
+local Replicator = require(ServerStorage.Packages.Replicator)
 local Profile = require(Wrappers._Player.Profile)
 local Coil = require(Wrappers.Coil)
 local wrapper = require(Packages.Wrapper)
@@ -44,8 +45,23 @@ function Player.wrap(rbxPlayer: Player)
     self.isPrivateServerOwner = game.PrivateServerOwnerId == rbxPlayer.UserId
     self.playerJoinedAt = os.clock()
 
+    local settings = Replicator.get(self.Profile.Settings.roblox)
+
     --// Methods
+    function settings:ApplySetting(setting: string, value: any)
+        
+        warn("HI")
+        warn(self.Profile.Settings)
+
+        local oldValue = self.Profile.Settings:GetAttribute(setting)
+
+        assert(oldValue)
+        assert(type(oldValue) == type(value))
+
+        self.Profile.Settings:SetAttribute(setting, value)
+    end
     function self:loadCoils()
+
         for coilName: string, coilData in CoilsConfiguration do
             local coilProfile = self.Profile.Coils[coilName]
             if not coilProfile.Obtained then
@@ -61,12 +77,12 @@ function Player.wrap(rbxPlayer: Player)
             Coil.wrap(coilContainer, coilData)
         end
     end
-
     function self:turnModerator(enable: boolean?)
+
         self.isPrivateServerMod = enable or true
     end
-
     function self:blacklist(enable: boolean)
+
         blacklistedPlayers[rbxPlayer.UserId] = enable
         Player.wrap(rbxPlayer) --> Kick;
     end

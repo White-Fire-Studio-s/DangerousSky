@@ -4,38 +4,70 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
 --// Imports
-local Entity = require(Packages.Entity)
 local Wrapper = require(Packages.Wrapper)
+local Replication = require(Packages.Replication)
+
+--// Cache
+local profiles = setmetatable({}, { __mode = "k" })
 
 --// Profile
-return Entity.trait("Profile", function(self, rbxPlayer: Player)
+local Profile = {}
+
+function Profile.wrap(rbxPlayer: Player)
+    
+    local profileContainer = Instance.new("ObjectValue", rbxPlayer)
+    profileContainer.Name = "Profile"
+    
+    local self = Wrapper(profileContainer)
+    
     if rbxPlayer ~= Players.LocalPlayer then
         return
     end
-
+    
     --// Loader
     if self.isLoading then
         self:listenChange("isLoading"):await()
+        task.wait()
     end
-
+    
     --// Private
     local function computeSubData(dataWrapper)
+        
         for _, subData: ObjectValue in dataWrapper.roblox:GetChildren() do
+            
             if dataWrapper[subData.Name] then
                 continue
             end
+            
+            if not subData:IsA("ObjectValue") then
+                continue
+            end
+            
             local subDataWrapper = self:_host(Wrapper(subData))
+            local server = Replication.wrap(subData)
+            
             computeSubData(subDataWrapper)
-
-
-            dataWrapper[subData.Name] = subDataWrapper
+            
+            dataWrapper[subData.Name] = setmetatable({}, {
+                __index = function(_, index: string)
+                    return subDataWrapper[index] or server[index]
+                end
+            })
         end
     end
-
+    
     computeSubData(self)
     self:_host(self.roblox.ChildAdded:Connect(function()
         computeSubData(self)
     end))
-
+    
+    profiles[rbxPlayer] = self
+    
     return self
-end)
+end
+
+function Profile.get(rbxPlayer: Player)
+    return profiles[rbxPlayer] or Profile.wrap(rbxPlayer)
+end
+
+return Profile

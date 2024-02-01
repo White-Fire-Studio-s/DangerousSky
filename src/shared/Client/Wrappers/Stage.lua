@@ -47,6 +47,7 @@ end)
 local Stage = {}
 
 function Stage.wrap(stageModel: Model)
+    
     local self = Wrapper(stageModel)
     local stageCFrame, stageSize = stageModel:GetBoundingBox()
     if stageSize == Vector3.zero then
@@ -60,6 +61,7 @@ function Stage.wrap(stageModel: Model)
     local stageZone = Zone.fromRegion(stageCFrame, stageSize)
     
     local function showStageInformation()
+        
         shown:Play()
 
         StageName.Text = self.name
@@ -69,7 +71,11 @@ function Stage.wrap(stageModel: Model)
 
     local entered = stageZone.localPlayerEntered:Connect(showStageInformation)
 
-    self:cleaner(function() entered:Disconnect() end)
+    self:cleaner(function() 
+        
+        entered:Disconnect()
+        stageZone:destroy()
+    end)
 
     return self
 end

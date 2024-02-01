@@ -12,11 +12,14 @@ local Configuration = ReplicatedStorage:WaitForChild("Configuration")
 local ProfileService = require(ServerPackages.ProfileService)
 local ProfileSettings = require(Configuration.Profile)
 
-local wrapper = require(Packages.Wrapper)
-local Entity = require(Packages.Entity)
-local Signal = require(Packages.Signal)
+local Wrapper = require(Packages.Wrapper)
+
+--// Cache
+local profiles = setmetatable({}, { __mode = "k" })
 
 --// Profile
+local Profile = {}
+
 local ProfileStore = ProfileService.GetProfileStore("_userData", ProfileSettings.Scheme)
 if ProfileSettings.Mock then ProfileStore = ProfileStore.Mock end
 
@@ -24,34 +27,36 @@ local function isDict(data)
     return type(data) == "table" and type(next(data)) == "string"
 end
 
-return Entity.trait("Profile", function(self, rbxPlayer: Player)
+function Profile.wrap(rbxPlayer: Player)
+    
+    local profileContainer = Instance.new("ObjectValue", rbxPlayer)
+    profileContainer.Name = "Profile"
+    
+    local self = Wrapper(profileContainer)
     --// Load Profile
     local profile = ProfileStore:LoadProfileAsync(`id_{rbxPlayer.UserId}`)
     if not profile then return rbxPlayer:Kick() end
-
+    
     self.isLoading = true
     
-    local releaseSignal = Signal.new("profileReleased")
-
     profile:AddUserId(rbxPlayer.UserId)
     profile:Reconcile()
-    profile:ListenToRelease(function() releaseSignal:_tryEmit(); rbxPlayer:Kick() end)
-
+    profile:ListenToRelease(function() rbxPlayer:Kick() end)
+    
     if not rbxPlayer:IsDescendantOf(Players) then return profile:Release() end
-
+    
     self:_applyAttributes(profile.Data)
     self.roblox.AttributeChanged:Connect(function(attribute: string)
-         profile[attribute] = self[attribute] 
+        if not profile[attribute] then
+            return
+        end
+        
+        profile.Data[attribute] = self[attribute] 
     end)
-
+    
     rbxPlayer.AncestryChanged:Connect(function()
         profile:Release()
     end)
-
-    --// Methods
-    function self:listenToRelease(callback)
-        releaseSignal:once(callback)
-    end
     
     --// Functions
     local create;
@@ -59,29 +64,37 @@ return Entity.trait("Profile", function(self, rbxPlayer: Player)
         
         local subContainer = Instance.new("ObjectValue", parent.roblox)
         subContainer.Name = name;
-
-        local self = wrapper(subContainer)
+        
+        local self = Wrapper(subContainer)
         self:_applyAttributes(data)
-
+        
         subContainer.AttributeChanged:Connect(function(attribute: string)
             data[attribute] = self[attribute] 
         end)
-
-       create(self, data)
-
-       return self
+        
+        create(self, data)
+        
+        return self
     end
     function create(parentWrapper, data: { [string]: any })
-
+        
         for index, value in data do
             if isDict(value) then
                 parentWrapper[index] = wrap(index, value, parentWrapper)
             end
         end
     end
-
+    
     create(self, profile.Data)
-
+    
+    profiles[rbxPlayer] = self
+    
     self.isLoading = false
     return
-end)
+end
+
+function Profile.get(rbxPlayer: Player)
+    return profiles[rbxPlayer] or Profile.wrap(rbxPlayer)
+end
+
+return Profile

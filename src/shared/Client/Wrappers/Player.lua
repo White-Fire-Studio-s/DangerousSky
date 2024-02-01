@@ -16,8 +16,9 @@ local Profile = require(Wrappers._Player.Profile)
 local Coil = require(Wrappers.Coil)
 
 task.defer(function()
-    require(Interface.Components.Button)
     require(Wrappers._Player.Profile)
+    require(Interface.Components.Button)
+    require(Interface.Components.Slider)
 end)
 
 --// Player
@@ -35,14 +36,15 @@ function Player.wrap(rbxPlayer: Player)
     self.Profile = Profile.get(rbxPlayer)
 
     function self:loadCoils()
+        
         for _, coil in CollectionService:GetTagged("Coil") do
             Coil.wrap(coil)
         end
 
         CollectionService:GetInstanceAddedSignal("Coil"):Connect(Coil.wrap)
     end
-
     function self:loadInterface()
+
         for _, interface in Interface:GetChildren() do
             if not interface:IsA("ModuleScript") then
                 continue
