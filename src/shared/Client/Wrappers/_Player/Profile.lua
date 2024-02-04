@@ -15,20 +15,13 @@ local Profile = {}
 
 function Profile.wrap(rbxPlayer: Player)
     
-    local profileContainer = Instance.new("ObjectValue", rbxPlayer)
-    profileContainer.Name = "Profile"
-    
-    local self = Wrapper(profileContainer)
-    
     if rbxPlayer ~= Players.LocalPlayer then
         return
     end
+
+    local profileContainer = rbxPlayer:WaitForChild("Profile")
     
-    --// Loader
-    if self.isLoading then
-        self:listenChange("isLoading"):await()
-        task.wait()
-    end
+    local self = Wrapper(profileContainer)
     
     --// Private
     local function computeSubData(dataWrapper)
@@ -43,7 +36,7 @@ function Profile.wrap(rbxPlayer: Player)
                 continue
             end
             
-            local subDataWrapper = self:_host(Wrapper(subData))
+            local subDataWrapper = Wrapper(subData)
             local server = Replication.wrap(subData)
             
             computeSubData(subDataWrapper)

@@ -19,6 +19,10 @@ return {
         Settings = {
             Music = 1;
             SFX = 1;
+        };
+        Orbs = {
+            Light = 0;
+            Blackhole = 0;
         }
     };
     Mock = true

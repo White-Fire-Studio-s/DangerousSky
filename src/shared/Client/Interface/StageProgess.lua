@@ -23,8 +23,6 @@ local function updateColors()
         for _ = 1, oldStageAmount - stagesAmount do
             table.remove(frames):Destroy()
         end
-
-        warn("REMOVED STAGES")
     end
 
     if Stages:GetAttribute("amount") ~= stagesAmount then

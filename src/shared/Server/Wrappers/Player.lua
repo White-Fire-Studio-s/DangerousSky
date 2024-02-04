@@ -1,4 +1,5 @@
 --// Services
+local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -49,9 +50,6 @@ function Player.wrap(rbxPlayer: Player)
 
     --// Methods
     function settings:ApplySetting(setting: string, value: any)
-        
-        warn("HI")
-        warn(self.Profile.Settings)
 
         local oldValue = self.Profile.Settings:GetAttribute(setting)
 
@@ -99,7 +97,7 @@ function Player.wrap(rbxPlayer: Player)
             return
         end
 
-        character.Archivable = true
+        character:AddTag("character")
 
         local humanoid = character:WaitForChild("Humanoid")
 

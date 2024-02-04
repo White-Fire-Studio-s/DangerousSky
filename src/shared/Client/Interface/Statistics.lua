@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 local Profile = require(ReplicatedStorage.Client.Wrappers._Player.Profile)
 
 --// Assets
@@ -10,7 +11,9 @@ local StatisticsMain = Statistics:WaitForChild("Main")
 local Stats = StatisticsMain:WaitForChild("Stats")
 
 --// Constants
-local CHARACTER_CFRAME = CFrame.new(Vector3.new(-0, 1.5, 24.12)) * CFrame.Angles(0,0,0)
+local CHARACTER_CFRAME = CFrame.new(
+    -136.716, 24.52, -124.884
+)
 
 --// Vars
 local formatNumber = require(ReplicatedStorage.NumberFormatter)
@@ -39,28 +42,24 @@ local function setStatistic(profile, statistic: string, formatter: (number) -> s
 end
 
 local function setUserStatistic()
-    local rbxCharacter = Players.LocalPlayer.Character
-    if not rbxCharacter.Archivable then
-        rbxCharacter:GetPropertyChangedSignal("Archivable"):Wait()
+
+    local userDescription = Players:GetHumanoidDescriptionFromUserId(Players.LocalPlayer.UserId);
+    local dummy = Players:CreateHumanoidModelFromDescription(userDescription, Enum.HumanoidRigType.R6, Enum.AssetTypeVerification.ClientOnly)
+
+
+    dummy:PivotTo(CHARACTER_CFRAME)
+    dummy.Parent = StatisticsMain.User.Image.Viewport.WorldModel
+
+    local animations = (dummy.Humanoid.Animator :: Animator):GetPlayingAnimationTracks()
+
+    for _,animations: AnimationTrack in animations do
+        animations:Stop()
+        animations:Destroy()
     end
-    
-    local characterClone = Players.LocalPlayer.Character:Clone()
-    characterClone:PivotTo(CHARACTER_CFRAME)
-    for _, descendant: BasePart in characterClone:GetDescendants() do
-        if descendant:IsA("BasePart") then
-            descendant.Anchored = true
-        end
-    end
-    characterClone.Parent = StatisticsMain.User.Image.Viewport
-    
-    StatisticsMain.User.PlayerID.Text = `UserID: {Players.LocalPlayer.UserId}`
-    StatisticsMain.User.PlayerName.Text = Players.LocalPlayer.Name
 end 
 
 return function()
-    task.wait(.2)
-    setUserStatistic()
-    
+
     local statisticsFormatter = {
         Wins = formatNumber;
         Deaths = formatNumber;
@@ -70,10 +69,13 @@ return function()
     local playerProfile = Profile.get(Players.LocalPlayer)
     
     for statistic, formatter in statisticsFormatter do
+
         setStatistic(playerProfile, statistic, formatter)
         
         playerProfile.Statistics:listenChange(statistic):connect(function()
             setStatistic(playerProfile, statistic, formatter)
         end)
     end
+
+    setUserStatistic()
 end

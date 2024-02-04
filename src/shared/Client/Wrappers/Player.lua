@@ -19,6 +19,7 @@ task.defer(function()
     require(Wrappers._Player.Profile)
     require(Interface.Components.Button)
     require(Interface.Components.Slider)
+    require(Wrappers.Orb)
 end)
 
 --// Player

@@ -6,7 +6,7 @@ local RoundSettings = require(ReplicatedStorage.Configuration.Round)
 local roundContainer = Instance.new("Configuration", ReplicatedStorage)
     roundContainer.Name = "Round"
     
-local round = Round(roundContainer, RoundSettings)
+local round = Round.wrap(roundContainer, RoundSettings)
 round:start()
 
 while true do

@@ -44,7 +44,6 @@ function Coil.wrap(item: Tool, data)
     function self:disable()
         local rbxHumanoid = rbxPlayer.Character:WaitForChild("Humanoid")
 
-        warn(healingThread)
         if healsConnections[rbxHumanoid] then
             healsConnections[rbxHumanoid]:Disconnect()
             healsConnections[rbxHumanoid] = nil

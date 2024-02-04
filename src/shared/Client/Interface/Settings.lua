@@ -15,8 +15,6 @@ local Settings = MainScreen:WaitForChild("Settings"):WaitForChild("Main")
 --// Init
 return function () 
     
-    task.wait(.2)
-    
     local playerProfile = Profile.get(Players.LocalPlayer)
     local playerSettings = playerProfile.Settings
     
@@ -37,20 +35,21 @@ return function ()
         applyVolume(slider.value)
         
         --// Listeners
-        slider.Box.FocusLost:Connect(function()
+        slider.roblox.Box.FocusLost:Connect(function()
             
-            local text = slider.Box.Text
+            local text = slider.roblox.Box.Text
             local percentValue = text:match("%d+")
             if not percentValue then return end
             
             local value = tonumber(percentValue) / 100
             slider:set(value)
         end)
-        slider.Changed:Connect(function(value)
+
+        slider.Changed:connect(function(value)
             
-            slider.Box.Text = tostring(math.floor(value * 100)) .. "%"
+            slider.roblox.Box.Text = tostring(math.floor(value * 100)) .. "%"
         end)
-        slider.HoldReleased:Connect(function(value)
+        slider.HoldReleased:connect(function(value)
             
             playerSettings:invokeApplySettingAsync(settingKey, value)
             :andThenCall(applyVolume, value)

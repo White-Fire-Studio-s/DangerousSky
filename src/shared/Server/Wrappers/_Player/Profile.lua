@@ -29,7 +29,7 @@ end
 
 function Profile.wrap(rbxPlayer: Player)
     
-    local profileContainer = Instance.new("ObjectValue", rbxPlayer)
+    local profileContainer = Instance.new("ObjectValue")
     profileContainer.Name = "Profile"
     
     local self = Wrapper(profileContainer)
@@ -88,9 +88,12 @@ function Profile.wrap(rbxPlayer: Player)
     create(self, profile.Data)
     
     profiles[rbxPlayer] = self
+
     
+    profileContainer.Parent = rbxPlayer
     self.isLoading = false
-    return
+
+    return self
 end
 
 function Profile.get(rbxPlayer: Player)
