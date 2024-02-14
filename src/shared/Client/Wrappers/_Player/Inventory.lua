@@ -75,14 +75,14 @@ function Inventory.wrap(container: Folder)
 
     local function holderDied()
         if equippedItem then
-            local equippedItemSlot = slots[self:getItemStot(equippedItem)]
-            equippedItemSlot._interface.Size = UNEQUIPPED_SIZE
-
-            equippedItem = nil
+            self:requestItemAction(equippedItem)
         end
 
-        holderHumanoid = holder:WaitForChild("Humanoid")
+        holderCharacter = holder.CharacterAdded:Wait()
+        holderHumanoid = holderCharacter:WaitForChild("Humanoid")
         
+        equippedItem = nil
+
         self:_host(holderHumanoid.Died:Connect(holderDied))
     end
 

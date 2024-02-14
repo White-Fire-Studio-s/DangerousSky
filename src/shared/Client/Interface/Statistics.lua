@@ -46,7 +46,6 @@ local function setUserStatistic()
     local userDescription = Players:GetHumanoidDescriptionFromUserId(Players.LocalPlayer.UserId);
     local dummy = Players:CreateHumanoidModelFromDescription(userDescription, Enum.HumanoidRigType.R6, Enum.AssetTypeVerification.ClientOnly)
 
-
     dummy:PivotTo(CHARACTER_CFRAME)
     dummy.Parent = StatisticsMain.User.Image.Viewport.WorldModel
 
@@ -56,6 +55,9 @@ local function setUserStatistic()
         animations:Stop()
         animations:Destroy()
     end
+
+    StatisticsMain.User.PlayerID.Text = `UserID: {Players.LocalPlayer.UserId}`
+    StatisticsMain.User.PlayerName.Text = Players.LocalPlayer.Name
 end 
 
 return function()

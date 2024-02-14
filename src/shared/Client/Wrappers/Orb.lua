@@ -27,8 +27,7 @@ function Orb.wrap(orb: Model)
     local cframe = orb.WorldPivot
     local lifetime = 0
 
-    task.spawn(function()
-        
+    self:_host(task.spawn(function()
         repeat
             lifetime += task.wait()
 
@@ -54,9 +53,9 @@ function Orb.wrap(orb: Model)
             server:invokeCollectAsync(lifetime)
 
         until self.collected
-    end)
+    end))
 
-    self:listenChange("collected"):connect(function()
+    self:_host(self:listenChange("collected"):connect(function()
         
         Workspace.Soundtrack.SFX.Collect:Play()
 
@@ -68,7 +67,7 @@ function Orb.wrap(orb: Model)
         until fade == 1
 
         self:destroy()
-    end)
+    end))
 
     orbs[orb] = self
 

@@ -2,6 +2,7 @@
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Teams = game:GetService("Teams")
 local TweenService = game:GetService("TweenService")
 
 --// Assets
@@ -18,6 +19,7 @@ local Packages = ReplicatedStorage:WaitForChild("Packages")
 --// Imports
 local Wrapper = require(Packages.Wrapper)
 local Zone = require(Packages.Zone)
+local SpecialObject = require(script.Parent._Stage.SpecialObject)
 
 --// Constants
 local TWEEN_INFO = TweenInfo.new(0.5, Enum.EasingStyle.Quint)
@@ -32,7 +34,7 @@ local faded = TweenService:Create(StageInfo, TWEEN_INFO, FADED)
 
 --// Listeners
 shown.Completed:Connect(function()
-    task.wait(1.5)
+    task.wait(2)
     if 
         shown.PlaybackState == Enum.PlaybackState.Begin or
         shown.PlaybackState == Enum.PlaybackState.Playing 
@@ -49,32 +51,59 @@ local Stage = {}
 function Stage.wrap(stageModel: Model)
     
     local self = Wrapper(stageModel)
-    local stageCFrame, stageSize = stageModel:GetBoundingBox()
-    if stageSize == Vector3.zero then
-        task.wait()
 
-        stageCFrame, stageSize = stageModel:GetBoundingBox()
-    end
+    local specialObjects = stageModel:WaitForChild("SpecialObjects")
 
-    stageSize *= REGION_MULTIPLIER
+    function self:handleStageInformation()
 
-    local stageZone = Zone.fromRegion(stageCFrame, stageSize)
+
+        local stageZone = Zone.fromRegion(self.center, self.size * REGION_MULTIPLIER)
+        local function showStageInformation()
+            shown:Play()
     
-    local function showStageInformation()
-        
-        shown:Play()
+            StageInfo.StageName.Text = self.name
+            StageInfo.StageName.TextColor3 = self.baseColor
+            StageInfo.StageOwners.Text = `by {self.owners or "unknown"}`
+        end
+    
+        local entered = stageZone.localPlayerEntered:Connect(showStageInformation)
+    
+        self:cleaner(function()
+            stageZone:destroy()
+            entered:Disconnect()
+        end)
+    end
+    function self:loadSpecialObject(object: BasePart | Model)
 
-        StageName.Text = self.name
-        StageName.TextColor3 = self.baseColor
-        StageOwners.Text = `by {self.owners or "unknown"}`
+        if not object:HasTag("specialObject") then
+            return
+        end
+
+        local kinds = object:GetTags()
+        
+        SpecialObject.wrap(object, kinds)
+    end
+    function self:unloadSpecialObject(object: BasePart | Model)
+        local shallow = SpecialObject.findShallow(object)
+        if not shallow then return end
+
+        shallow:Destroy()
     end
 
-    local entered = stageZone.localPlayerEntered:Connect(showStageInformation)
+    self:handleStageInformation()
 
-    self:cleaner(function() 
-        
-        entered:Disconnect()
-        stageZone:destroy()
+    --// Special Objects Loader
+    for _, specialObject in specialObjects:GetDescendants() do
+        self:loadSpecialObject(specialObject)
+    end
+
+    specialObjects.DescendantAdded:Connect(function(...) self:loadSpecialObject(...) end)
+    specialObjects.DescendantRemoving:Connect(function(...) self:unloadSpecialObject(...) end)
+    
+    self:cleaner(function()
+        for _, specialObject in specialObjects:GetDescendants() do
+            self:unloadSpecialObject(specialObject)
+        end
     end)
 
     return self

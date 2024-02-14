@@ -20,6 +20,11 @@ local Inventory = require(Wrappers._Player.Inventory)
 local Orb = require(Wrappers.Orb)
 local Zone = require(Packages.Zone)
 
+for _, specialObject in script.Parent._Stage:GetChildren() do
+    require(specialObject)
+end
+
+
 --// Constants
 local STAGES_START_CFRAME = workspace:WaitForChild("StagesStart").CFrame
 
@@ -206,9 +211,13 @@ function Round.wrap(container: Configuration, data)
 
 			stage:PivotTo(stageStart)
 
+			local center, size = stage:GetBoundingBox()
+
 			stage:SetAttribute("name", stage.Name)
 			stage:SetAttribute("start", stage.Start.Position)
 			stage:SetAttribute("end", stage.End.Position)
+			stage:SetAttribute("center", center)
+			stage:SetAttribute("size", size)
 
 			stage:AddTag("stage")
 			stage.Name = index
