@@ -1,106 +1,88 @@
-local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerStorage = game:GetService("ServerStorage")
 
 local Packages = ReplicatedStorage:WaitForChild("Packages")
-local ServerPackages = ServerStorage:WaitForChild("Packages")
 
-local Replicator = require(ServerPackages.Replicator)
 local wrapper = require(Packages.Wrapper)
+local Zap = require(ReplicatedStorage.Zap)
 
 local Inventory = {}
 
 local inventories = setmetatable({}, { __mode = "k" })
-function Inventory.wrap(container: Folder)
-    local holder = container:FindFirstAncestorWhichIsA("Player") :: Player
-    local holderCharacter = holder.CharacterAdded:Wait()
-    local holderHumanoid = holderCharacter:WaitForChild("Humanoid")
 
-    --// Factory setup
-    local self = wrapper(container)
-    local client = Replicator.get(container)
+function Inventory.wrap(holder: Player)
 
-    --// Private
-    local items = setmetatable({}, { __mode = "k" })
-    local equippedItem: Tool
+	local container = Instance.new("Folder", holder)
 
-    local function holderDied()
-        for _, coil in CollectionService:GetTagged(`item_{holder.Name}`) do
-            coil.Parent = container
-        end
+	--// Factory setup
+	local self = wrapper(container)
 
-        holderCharacter = holder.CharacterAdded:Wait()
-        holderHumanoid = holderCharacter:WaitForChild("Humanoid")
+	--// Private
+	local items = {}
 
-        self:_host(holderHumanoid.Died:Connect(holderDied))
-    end
+	--// Methods
+	function self:addItem(item: Tool)
 
-    --// Methods
-    function self:addItem(item: Tool)
+		if items[item] then return end
         
-        if items[item] then return end
         if not item:IsA("Tool") then return end
         if not item:IsDescendantOf(holder) then return end
 
-        items[item] = true;
-        item:AddTag(`item_{holder.Name}`)
-        self:_host(item.Destroying:Once(function() self:removeItem(item) end))
-    end
-    function self:removeItem(item: Tool)
+		items[item] = true;
 
-        if not items[item] or not item:IsA("Tool") then
-            return
-        end
+		self:_host(item.Destroying:Once(function() self:removeItem(item) end))
+	end
+	function self:removeItem(item: Tool)
 
-        items[item] = nil;
-    end
-    function self:equipItem(item: Tool)
+		if not items[item] or not item:IsA("Tool") then
+			return
+		end
 
-        if not items[item] then
-            return
-        end
+		items[item] = nil;
+	end
+	
+	function self:unequipEquippedItem()
 
-        if holderHumanoid:GetState() == Enum.HumanoidStateType.Dead then
-            return
-        end
+		local equippedItem = holder.Character:FindFirstAncestorWhichIsA("Tool")
+		if not equippedItem then return end
+		if not items[equippedItem] then return end
+		
+		equippedItem.Parent = container
+	end
+	function self:hasItem(itemName)
+		local item = container:FindFirstChild(itemName) or holder.Character:FindFirstChild(itemName)
 
-        if equippedItem and equippedItem ~= item then
-            self:unequipItem(equippedItem)
-        end
+		return item ~= nil and item:IsA("Tool")
+	end
+	function self:changeParents()
+		
+		for item in items do
+			item.Parent = container
+		end
+	end 
 
-        item.Parent = holder.Character
-        equippedItem = item
-    end
-    function self:unequipItem(item: Tool)
+	--// Listeners
+	for _, item in container:GetChildren() do self:addItem(item) end
+
+	self:_host(container.ChildAdded:Connect(function(item) self:addItem(item) end))
+    self:_host(holder.CharacterAdded:Connect(function(character)
+        local humanoid = character:WaitForChild("Humanoid")
         
-        if not items[item] then
-            return
-        end
+		for item in items do
+			item.Parent = holder.Backpack
+		end
 
-        if holderHumanoid:GetState() == Enum.HumanoidStateType.Dead then
-            return
-        end
+        self:_host(humanoid.Died:Connect(self.changeParents))
+    end))
 
-        item.Parent = container
-    end
+	Zap.UnequipTools.setCallback(self.changeParents)
 
-    --// Client
-    function client.EquipItem(_,item) self:equipItem(item) end 
-    function client.UnequipItem(_,item) self:unequipItem(item) end    
-   
-    --// Listeners
-    for _, item in container:GetChildren() do self:addItem(item) end
+	inventories[holder] = self
 
-    self:_host(container.ChildAdded:Connect(function(item) self:addItem(item) end))
-    self:_host(holderHumanoid.Died:Connect(holderDied))
-
-    inventories[holder] = self
-
-    return self
+	return self
 end
 
 function Inventory.get(rbxPlayer: Player)
-    return inventories[rbxPlayer]
+	return inventories[rbxPlayer]
 end
 
 return Inventory

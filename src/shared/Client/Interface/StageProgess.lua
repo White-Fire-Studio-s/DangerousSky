@@ -95,7 +95,9 @@ local function insertPlayer(rbxPlayer: Player)
 
         local totalDistance: number = (finish - start).Magnitude
 
-        local position = rbxCharacter.PrimaryPart.Position
+        local position = workspace.PlayersPositions:GetAttribute(rbxPlayer.Name)
+        if not position then return end
+
         local distance = (position - finish).Magnitude
         local percent = math.clamp(distance/totalDistance, 0, 1)
 

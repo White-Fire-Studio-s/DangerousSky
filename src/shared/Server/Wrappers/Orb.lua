@@ -18,6 +18,8 @@ local Profile = require(Wrappers._Player.Profile)
 
 --// Cache
 local orbs = setmetatable({}, { __mode = "k" })
+
+--// Module
 local Orb = {}
 
 function Orb.wrap(orb: Model)
@@ -51,6 +53,7 @@ function Orb.wrap(orb: Model)
 
 		playerProfile.Orbs[orb.Name] += 1
 
+		self.whoCollected = rbxPlayer.Name
 		self.collected = true
 
         task.delay(.4, self.destroy, self)

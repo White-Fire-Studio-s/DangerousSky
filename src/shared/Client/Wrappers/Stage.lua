@@ -19,7 +19,7 @@ local Packages = ReplicatedStorage:WaitForChild("Packages")
 --// Imports
 local Wrapper = require(Packages.Wrapper)
 local Zone = require(Packages.Zone)
-local SpecialObject = require(script.Parent._Stage.SpecialObject)
+local SpecialObject = require(script.Parent.SpecialObject)
 
 --// Constants
 local TWEEN_INFO = TweenInfo.new(0.5, Enum.EasingStyle.Quint)
@@ -50,9 +50,8 @@ local Stage = {}
 
 function Stage.wrap(stageModel: Model)
     
+    
     local self = Wrapper(stageModel)
-
-    local specialObjects = stageModel:WaitForChild("SpecialObjects")
 
     function self:handleStageInformation()
 
@@ -83,9 +82,18 @@ function Stage.wrap(stageModel: Model)
         
         SpecialObject.wrap(object, kinds)
     end
-    function self:unloadSpecialObject(object: BasePart | Model)
-        local shallow = SpecialObject.findShallow(object)
+    function self:unloadSpecialObject(rbxObject: BasePart | Model)
+        local shallow = SpecialObject.findShallow(rbxObject)
+
         if not shallow then return end
+
+        for _, texture in rbxObject:GetChildren() do
+            if not texture:IsA("Texture") then
+                continue
+            end
+
+            texture.Transparency = 0
+        end
 
         shallow:Destroy()
     end
@@ -93,18 +101,23 @@ function Stage.wrap(stageModel: Model)
     self:handleStageInformation()
 
     --// Special Objects Loader
-    for _, specialObject in specialObjects:GetDescendants() do
-        self:loadSpecialObject(specialObject)
-    end
+    self:_host(task.defer(function()
 
-    specialObjects.DescendantAdded:Connect(function(...) self:loadSpecialObject(...) end)
-    specialObjects.DescendantRemoving:Connect(function(...) self:unloadSpecialObject(...) end)
-    
-    self:cleaner(function()
+        local specialObjects = stageModel:WaitForChild("SpecialObjects", math.huge)
+
         for _, specialObject in specialObjects:GetDescendants() do
-            self:unloadSpecialObject(specialObject)
+            self:loadSpecialObject(specialObject)
         end
-    end)
+    
+        specialObjects.DescendantAdded:Connect(function(...) self:loadSpecialObject(...) end)
+        specialObjects.DescendantRemoving:Connect(function(...) self:unloadSpecialObject(...) end)
+        
+        self:cleaner(function()
+            for _, specialObject in specialObjects:GetDescendants() do
+                self:unloadSpecialObject(specialObject)
+            end
+        end)
+    end))
 
     return self
 end

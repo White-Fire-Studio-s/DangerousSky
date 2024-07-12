@@ -1,6 +1,7 @@
 --// Services
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
 
 -->>
 --// Assets
@@ -10,10 +11,10 @@ local Wrappers = Client:WaitForChild("Wrappers")
 local Interface = Client:WaitForChild("Interface")
 
 --// Imports
-local Inventory = require(Wrappers._Player.Inventory)
 local wrapper = require(Packages.Wrapper)
 local Profile = require(Wrappers._Player.Profile)
 local Coil = require(Wrappers.Coil)
+local Zap = require(ReplicatedStorage.Zap)
 
 task.defer(function()
     require(Wrappers._Player.Profile)
@@ -25,6 +26,10 @@ end)
 --// Player
 local Player = {}
 
+local function formatChatMessage(data)
+    return `<font color="#{data.Color}"><font size="{data.FontSize}"><font face="{data.Font}">{data.Text}</font></font></font>`
+end
+
 function Player.wrap(rbxPlayer: Player)
     if rbxPlayer ~= game.Players.LocalPlayer then
         rbxPlayer:WaitForChild("Profile"):Destroy()
@@ -33,7 +38,7 @@ function Player.wrap(rbxPlayer: Player)
     end
 
     local self = wrapper(rbxPlayer)
-    self.Inventory = Inventory.wrap(rbxPlayer:WaitForChild("Inventory") :: Folder)
+    local channel = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXSystem")
     self.Profile = Profile.get(rbxPlayer)
 
     function self:loadCoils()
@@ -57,6 +62,16 @@ function Player.wrap(rbxPlayer: Player)
 
     self:loadCoils()
     self:loadInterface()
+
+    Zap.DisplayMessage.setCallback(function(data)
+        channel:DisplaySystemMessage(formatChatMessage(data))
+    end)
+
+    rbxPlayer.CharacterAdded:Connect(function(character)
+        local humanoid = character:WaitForChild("Humanoid")
+
+        humanoid.WalkSpeed = workspace:GetAttribute("roundSpeed")
+    end)
 
     return self
 end

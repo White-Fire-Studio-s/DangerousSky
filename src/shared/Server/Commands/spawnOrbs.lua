@@ -22,5 +22,5 @@ return function(rbxPlayer: Player, arguments: {any})
         return
     end
     
-    Round:spawnOrbs(amount)
+    Round:spawnOrbs(math.ceil(amount))
 end

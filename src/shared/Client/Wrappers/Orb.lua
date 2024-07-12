@@ -13,7 +13,7 @@ local Wrappers = Client:WaitForChild("Wrappers")
 
 --// Imports
 local Wrapper = require(Packages.Wrapper)
-local Replication = require(Packages.Replication)
+local Zap = require(ReplicatedStorage.Zap)
 
 --// Module
 local Orb = {}
@@ -22,7 +22,6 @@ local orbs = setmetatable({}, { __mode = "k" })
 
 function Orb.wrap(orb: Model)
     local self = Wrapper(orb)
-    local server = Replication.await(orb)
 
     local cframe = orb.WorldPivot
     local lifetime = 0
@@ -50,23 +49,26 @@ function Orb.wrap(orb: Model)
                 continue
             end
 
-            server:invokeCollectAsync(lifetime)
+            Zap.CollectOrb.fire({ orb = orb, lifetime = lifetime})
+
+            break
 
         until self.collected
     end))
 
     self:_host(self:listenChange("collected"):connect(function()
         
-        Workspace.Soundtrack.SFX.Collect:Play()
+        if self.whoCollected == Players.LocalPlayer.Name then
+            Workspace.Soundtrack.SFX.Collect:Play()
+        end
 
-        local fade = 0
-        repeat fade += task.wait()/0.2
-            if fade > 1 then fade = 1 end
+        local fade = 1
+        repeat fade -= task.wait()/0.2
+            if fade < 0 then fade = 0 end
 
-            orb:ScaleTo(math.max(1 - fade, 0.01))
-        until fade == 1
+            orb:ScaleTo(math.max(fade, 0.01))
+        until fade == 0
 
-        self:destroy()
     end))
 
     orbs[orb] = self

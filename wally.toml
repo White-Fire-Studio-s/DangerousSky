@@ -10,6 +10,8 @@ Wrapper = "ernisto/wrapper@0.4.2"
 Signal = "ernisto/signal@0.1.1"
 Entity = "ernisto/entity@0.2.1"
 Zone = "mattschrubb/zoneplus@3.2.0"
+Cache ="ernisto/cache@0.4.2"
+Promise = "evaera/promise@4.0.0"
 
 [server-dependencies]
 Replicator = "ernisto/replicator@0.2.3"

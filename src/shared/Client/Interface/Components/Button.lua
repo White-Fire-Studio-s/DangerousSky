@@ -1,5 +1,6 @@
 --// Services
 local CollectionService = game:GetService("CollectionService")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
@@ -8,7 +9,7 @@ local Workspace = game:GetService("Workspace")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 
 --// Imports
-local Entity = require(Packages.Entity)
+local Signal = require(Packages.Signal)
 local Wrapper = require(Packages.Wrapper)
 local Frame = require(script.Parent.Frame)
 
@@ -19,10 +20,14 @@ local INCREASE_TWEENINFO = TweenInfo.new(0.2, Enum.EasingStyle.Quint)
 --// Cache
 local buttons = setmetatable({}, { __mode = "k" })
 
+--// Variables
+local Mouse = Players.LocalPlayer:GetMouse()
+
 --// Module
 local Button = {}
 
 function Button.wrap(button: TextButton | ImageButton)
+
     local self = Wrapper(button)
     
     local leastClick = 0
@@ -42,24 +47,37 @@ function Button.wrap(button: TextButton | ImageButton)
     local closes = button:FindFirstChild("Closes")
     
     self.group = button:GetAttribute("group") or "main"
+
+    self.Clicked = Signal.new('')
+    self.canCloseItself = if self.canCloseItself ~= nil then self.canCloseItself else true
+    self.clickTween = if self.clickTween ~= nil then self.clickTween else true
+    self.cooldown = self.cooldown or 0.2
     
     function self:onClick()
         
-        if os.clock() - leastClick <= .2 then
+        if os.clock() - leastClick <= self.cooldown then
             return
         end
         
         Workspace.Soundtrack.SFX.Click:Play()
+        task.spawn(self.circleClick, self)
         
         --// Button Tween
-        clickTween:Play()
+        if self.clickTween then
+            clickTween:Play()
+        end
         
         --// Frame Tween
         if opens then
             
-            local frame = Frame.get(opens.Value)
+            local frame = Frame.get(opens.Value, self)
             
             if frame.isOpen then
+
+                if not self.canCloseItself then
+                    return
+                end
+
                 frame:close()
             else
                 frame:open()
@@ -68,11 +86,42 @@ function Button.wrap(button: TextButton | ImageButton)
         
         if closes then
             
-            local frame = Frame.get(closes.Value)
+            local frame = Frame.get(closes.Value, self)
             frame:close()
         end
         
         leastClick = os.clock()
+        self.Clicked:_emit()
+    end
+
+    function self:circleClick()
+        
+        local X = Mouse.X
+        local Y = Mouse.Y
+
+        button.ClipsDescendants = true
+
+		local Circle = game.ReplicatedStorage.Assets:WaitForChild("Circle"):Clone()
+		Circle.Parent = button
+		local NewX = X - Circle.AbsolutePosition.X
+		local NewY = Y - Circle.AbsolutePosition.Y
+		Circle.Position = UDim2.new(0, NewX, 0, NewY)
+
+		local Size = 0
+		if button.AbsoluteSize.X > button.AbsoluteSize.Y then
+			Size = button.AbsoluteSize.X*1.5
+		elseif button.AbsoluteSize.X < button.AbsoluteSize.Y then
+			Size = button.AbsoluteSize.Y*1.5
+		elseif button.AbsoluteSize.X == button.AbsoluteSize.Y then																										Size = Button.AbsoluteSize.X*1.5
+		end
+
+		local Time = 0.5
+		Circle:TweenSizeAndPosition(UDim2.new(0, Size, 0, Size), UDim2.new(0.5, -Size/2, 0.5, -Size/2), "Out", "Quad", Time, false, nil)
+		for _= 1,10 do
+			Circle.ImageTransparency = Circle.ImageTransparency + 0.01
+			task.wait(Time/10)
+		end
+		Circle:Destroy()
     end
     
     --// Listeners

@@ -18,6 +18,8 @@ local Coil = {}
 --// Cache
 local coils = setmetatable({}, { __mode = "k"} )
 
+local defaultGravity = workspace.Gravity
+
 function Coil.wrap(item: Tool)
     if not item:IsDescendantOf(rbxPlayer) then
         return
@@ -25,7 +27,6 @@ function Coil.wrap(item: Tool)
     local self = wrapper(item)
 
     local defaultJumpPower = StarterPlayer.CharacterJumpPower
-    local defaultGravity = workspace.Gravity
     local defaultSpeed = StarterPlayer.CharacterWalkSpeed
 
     local usedJumps = 0
@@ -42,10 +43,16 @@ function Coil.wrap(item: Tool)
 
         local rbxHumanoid =  rbxPlayer.Character.Humanoid
 
+        local gravity = defaultGravity - gravityDecrease
+        local speed = defaultSpeed + speedIncrease
+
+        local roundGravity = workspace:GetAttribute("roundGravity")
+        local roundSpeed = workspace:GetAttribute("roundSpeed")
+
         --// Setters
         rbxHumanoid.JumpPower = defaultJumpPower + jumpIncrease
-        rbxHumanoid.WalkSpeed = defaultSpeed + speedIncrease
-        Workspace.Gravity = defaultGravity - gravityDecrease
+        rbxHumanoid.WalkSpeed = if roundSpeed > speed then roundSpeed else speed
+        Workspace.Gravity = if roundGravity < gravity then roundGravity else gravity
 
         --// Listeners
         if self.MaxJumps > 0 then
@@ -68,8 +75,8 @@ function Coil.wrap(item: Tool)
         local rbxHumanoid =  rbxPlayer.Character.Humanoid
 
         rbxHumanoid.JumpPower = defaultJumpPower 
-        rbxHumanoid.WalkSpeed = defaultSpeed 
-        Workspace.Gravity = defaultGravity 
+        rbxHumanoid.WalkSpeed = workspace:GetAttribute("roundSpeed")
+        Workspace.Gravity = workspace:GetAttribute("roundGravity") 
 
         if self.MaxJumps > 0 then
             humanoidStateConnection:Disconnect()
@@ -106,6 +113,35 @@ function Coil.wrap(item: Tool)
     --// Listeners
     item.Equipped:Connect(function() self:enable() end)
     item.Unequipped:Connect(function() self:disable() end)
+
+    self:_host(workspace:GetAttributeChangedSignal("roundGravity"):Connect(function()
+        
+        if not self:isEquipped() then
+            return
+        end
+
+        local jumpIncrease = self.JumpIncrease
+        local gravityDecrease = 51.4 * jumpIncrease / self.MaxJumpIncrease
+
+        local gravity = defaultGravity - gravityDecrease
+        local roundGravity = workspace:GetAttribute("roundGravity")
+
+        Workspace.Gravity = if roundGravity < gravity then roundGravity else gravity
+    end))
+
+    self:_host(workspace:GetAttributeChangedSignal("roundSpeed"):Connect(function()
+        
+        if not self:isEquipped() then
+            return
+        end
+
+        local rbxHumanoid =  rbxPlayer.Character.Humanoid
+
+        local speed = defaultSpeed + self.SpeedIncrease
+        local roundSpeed = workspace:GetAttribute("roundSpeed")
+
+        rbxHumanoid.WalkSpeed = if roundSpeed > speed then roundSpeed else speed
+    end))
 
     --// Cache
     coils[item] = self

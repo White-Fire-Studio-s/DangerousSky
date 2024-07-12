@@ -3,6 +3,7 @@ local CollectionService = game:GetService("CollectionService")
 local ContextActionService = game:GetService("ContextActionService")
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 
 --// Assets
@@ -27,7 +28,12 @@ local frames = setmetatable({}, { __mode = "k" })
 --// Component
 local Frame = {}
 
-function Frame.wrap(frame: Frame)
+function Frame.wrap(frame: Frame, button: TextButton)
+
+    if frame:IsDescendantOf(StarterGui) then
+        return
+    end
+
     local self = Wrapper(frame)
     
     local upPosition = frame.Position
@@ -39,17 +45,31 @@ function Frame.wrap(frame: Frame)
     frame.Position = downPosition
     frame.Visible = true
     
-    self.isOpen = false
+    self.button = button
     self.group = frame:GetAttribute("group") or "main"
+    self.openType = self.openType or "tween"
+
+    if self.isOpen then
+
+        shownFrames[self.group][self] = true
+        frame.Position = upPosition
+    end
     
     function self:open()
         
         local openedFrame = next(shownFrames[self.group])
+
         if openedFrame then
+
             openedFrame:close()
         end
         
-        upTween:Play()
+        if self.openType == "tween" then
+            upTween:Play()
+        else
+            frame.Position = upPosition
+            frame.Visible = true
+        end
         
         Lighting.GuiBlur.Enabled = true
         self.isOpen = true
@@ -58,8 +78,13 @@ function Frame.wrap(frame: Frame)
     end
     function self:close()
         
-        downTween:Play()
-        
+        if self.openType == "tween" then
+            downTween:Play()
+        else
+            frame.Position = downPosition
+            frame.Visible = false
+        end       
+         
         Lighting.GuiBlur.Enabled = false
         self.isOpen = false
         
@@ -71,8 +96,8 @@ function Frame.wrap(frame: Frame)
     return self
 end
 
-function Frame.get(frame: Frame)
-    return frames[frame] or Frame.wrap(frame)
+function Frame.get(frame: Frame, button: TextButton?)
+    return frames[frame] or Frame.wrap(frame, button)
 end
 
 --// Loader

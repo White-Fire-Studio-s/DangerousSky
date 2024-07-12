@@ -1,4 +1,5 @@
 --// Services
+local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
@@ -27,21 +28,39 @@ local function isDict(data)
     return type(data) == "table" and type(next(data)) == "string"
 end
 
+_G.ORDERED_STATISTIC = setmetatable({}, { __mode = "k" })
+
 function Profile.wrap(rbxPlayer: Player)
-    
+
     local profileContainer = Instance.new("ObjectValue")
     profileContainer.Name = "Profile"
     
     local self = Wrapper(profileContainer)
-    --// Load Profile
-    local profile = ProfileStore:LoadProfileAsync(`id_{rbxPlayer.UserId}`)
-    if not profile then return rbxPlayer:Kick() end
-    
+
     self.isLoading = true
     
+    --// Releases
+    local releases = {}
+
+    function releases.kickPlayer()
+        return rbxPlayer:Kick()
+    end
+
+    function releases.saveLeaderboard()
+        
+        for _,data: {store: OrderedDataStore, value: number } in _G.ORDERED_STATISTIC[rbxPlayer] do
+
+            data.store:SetAsync(rbxPlayer.UserId, data.value // 1)
+        end
+    end
+
+     --// Load Profile
+    local profile = ProfileStore:LoadProfileAsync(`id_{rbxPlayer.UserId}`)
+    if not profile then return rbxPlayer:Kick() end
+
     profile:AddUserId(rbxPlayer.UserId)
     profile:Reconcile()
-    profile:ListenToRelease(function() rbxPlayer:Kick() end)
+    profile:ListenToRelease(function() for _, r in releases do r() end end)
     
     if not rbxPlayer:IsDescendantOf(Players) then return profile:Release() end
     
@@ -86,12 +105,20 @@ function Profile.wrap(rbxPlayer: Player)
     end
     
     create(self, profile.Data)
-    
-    profiles[rbxPlayer] = self
 
+
+    profiles[rbxPlayer] = self
     
     profileContainer.Parent = rbxPlayer
     self.isLoading = false
+
+    _G.ORDERED_STATISTIC[rbxPlayer] = { 
+        ["Gems"] = { store = DataStoreService:GetOrderedDataStore("Gems"), value = self.Statistics.Gems };
+        ["Deaths"] = { store = DataStoreService:GetOrderedDataStore("Deaths"), value = self.Statistics.Deaths };
+        ["Wins"] = { store = DataStoreService:GetOrderedDataStore("Wins"), value = self.Statistics.Wins };
+        ["BestTime"] = { store = DataStoreService:GetOrderedDataStore("BestTime"), value = self.Statistics.BestTime };
+        ["TimePlayed"] = { store = DataStoreService:GetOrderedDataStore("TimePlayed"), value = self.Statistics.TimePlayed };
+    }
 
     return self
 end

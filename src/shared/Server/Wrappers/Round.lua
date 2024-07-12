@@ -1,7 +1,10 @@
 --// Services
+local CollectionService = game:GetService("CollectionService")
+local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
+local TeleportService = game:GetService("TeleportService")
 local Workspace = game:GetService("Workspace")
 
 --// Assets
@@ -19,16 +22,12 @@ local Profile = require(Wrappers._Player.Profile)
 local Inventory = require(Wrappers._Player.Inventory)
 local Orb = require(Wrappers.Orb)
 local Zone = require(Packages.Zone)
-
-for _, specialObject in script.Parent._Stage:GetChildren() do
-    require(specialObject)
-end
-
+local Player = require(Wrappers.Player)
+local SpecialObject = require(script.Parent.SpecialObject)
+local Zap = require(ReplicatedStorage.Zap)
 
 --// Constants
 local STAGES_START_CFRAME = workspace:WaitForChild("StagesStart").CFrame
-
-
 local StageBehavior = table.freeze {
 	Common = "common";
 	Secret = "secret";
@@ -41,6 +40,9 @@ Finish.Changed:Connect(function()
 	finishZone:destroy()
 	finishZone = Zone.fromRegion(Finish:GetBoundingBox())
 end)
+
+--// Datastore
+local ServerIds = DataStoreService:GetDataStore("ServerIDS")
 
 --// Wrapper
 local Round = {};
@@ -63,7 +65,7 @@ function Round.wrap(container: Configuration, data)
 	local roundStart: typeof(os.clock())
 
 	local timePerStage =  self.defaultTime / self.stagesAmount
-	local cloudsPerStage = 100 / self.stagesAmount
+	local GemsPerStage = 100 / self.stagesAmount
 	local orbs = ReplicatedStorage.Assets.Orbs:GetChildren()
 	local spawnOrbsThread
 
@@ -75,11 +77,34 @@ function Round.wrap(container: Configuration, data)
 	self.roundsCount = 0
 	self.winners = setmetatable({}, { __mode = "k "})
 
+	--// Effects
+	self.Invincibility = false
+	self.PlusStage = false
+	self.CorruptedVision = false
+	self.Fog = false
+	self.LowerGravity = false
+	self.HigherSpeed = false
+	self.AddTimer = false
+
 	local maxTimer = timePerStage * self.stagesAmount
 	self.timer = maxTimer
 
 	--// Signals
 	self.timerEnded = Signal.new("timerEnded")
+
+	self.serverId = tostring({}):sub(21):upper() do
+		ServerIds:SetAsync(self.serverId, game.JobId)
+
+		game:BindToClose(function() ServerIds:RemoveAsync(self.serverId) end)
+
+		Zap.JoinServer.setCallback(function(rbxPlayer: Player, serverId: string)
+			
+			local jobId = ServerIds:GetAsync(serverId)
+			if not jobId then return end
+
+			TeleportService:TeleportToPlaceInstance(game.PlaceId, jobId, rbxPlayer)
+		end)
+	end
 
 	--// Methods
 	function self:start()
@@ -129,10 +154,21 @@ function Round.wrap(container: Configuration, data)
 		table.clear(stageSelector.unavailable.secret)
 
 		table.clear(self.winners)
-		self.winnersCount = 0
 
-		self:resetPlayers()
-		self:start()
+		self.winnersCount = 0
+		
+		self.Invincibility = false
+		self.PlusStage = false
+		self.CorruptedVision = false
+		self.Fog = false
+		self.LowerGravity = false
+		self.HigherSpeed = false
+		self.AddTimer = false
+
+		task.defer(function()
+			self:resetPlayers()
+			self:start()
+		end)
 	end
 	function self:spawnOrbs(amount: number)
 
@@ -158,7 +194,6 @@ function Round.wrap(container: Configuration, data)
             until false
         end)
     end
-
 	function self:startCountdown()
 
 		self:_host(task.spawn(function()
@@ -238,6 +273,10 @@ function Round.wrap(container: Configuration, data)
 			lastStageTemplate = stageTemplate
 		end
 
+		for _,specialObject in CollectionService:GetTagged("specialObject") do
+			SpecialObject(specialObject)
+		end
+
 		Stages:SetAttribute("start", self.stages[1].Start.Position)
 		Stages:SetAttribute("end", lastStage.End.Position)
 		Stages:SetAttribute("amount", #self.stages)
@@ -262,11 +301,10 @@ function Round.wrap(container: Configuration, data)
 
 		for _,rbxPlayer in players do
 			local playerInventory = Inventory.get(rbxPlayer)
-			local item = rbxPlayer.Character:FindFirstChildOfClass("Tool")
-			if item then
-				playerInventory:unequipItem(item)
-			end
+			playerInventory:changeParents()
 
+			rbxPlayer.Character.Humanoid.Health = 0
+			task.wait()
 			rbxPlayer:LoadCharacter()
 		end
 	end
@@ -276,9 +314,22 @@ function Round.wrap(container: Configuration, data)
 			return
 		end
 
+		local player = Player.get(rbxPlayer)
+
+		local doubleGems = player.Market:getPass(729919308)
+		local vip = player.Market:getPass(731206303)
+		local donator = player.Market:getPass(767864718)
+
+		local multiply = if doubleGems.isOwned then 2 else 1
+		if vip.isOwned then multiply *= 2 end
+		if donator.isOwned then multiply *= 1.2 end
+
 		local playerProfile = Profile.get(rbxPlayer)
-		playerProfile.Clouds += cloudsPerStage * self.stagesAmount
+		playerProfile.Statistics.Gems += GemsPerStage * self.stagesAmount * multiply
 		playerProfile.Statistics.Wins += 1
+
+		_G.ORDERED_STATISTIC[rbxPlayer].Gems.value += GemsPerStage * self.stagesAmount * multiply
+		_G.ORDERED_STATISTIC[rbxPlayer].Wins.value += 1
 
 		self.winners[rbxPlayer] = true
 		self.winnersCount += 1

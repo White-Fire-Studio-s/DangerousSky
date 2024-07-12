@@ -25,5 +25,5 @@ return function(rbxPlayer: Player, arguments: {any})
         return
     end
 
-    RoundContainer:SetAttribute("stagesAmount", stagesAmount)
+    RoundContainer:SetAttribute("stagesAmount", math.ceil(stagesAmount))
 end

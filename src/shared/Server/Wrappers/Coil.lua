@@ -19,6 +19,8 @@ function Coil.wrap(item: Tool, data)
 
     local rbxPlayer = item:FindFirstAncestorOfClass("Player")
         :: Player
+
+        warn(item, rbxPlayer)
     assert(rbxPlayer, `Coil need has a player as ancestor`)
 
     local self = wrapper(item, "Coil")
@@ -85,8 +87,8 @@ function Coil.wrap(item: Tool, data)
     end
 
     --// Listeners
-    item.Equipped:Connect(function() self:enable() end)
-    item.Unequipped:Connect(function() self:disable() end)
+    item.Equipped:Connect(function() pcall(function() self:enable() end) end)
+    item.Unequipped:Connect(function() pcall(function() self:disable() end) end)
 
     --// Cache
     coils[item] = self

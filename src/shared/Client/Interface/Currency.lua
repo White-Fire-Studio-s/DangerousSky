@@ -41,7 +41,7 @@ end)
 
 --// Init
 return function ()
-    setCurrency(playerProfile.Clouds)
+    setCurrency(playerProfile.Statistics.Gems)
     
-    playerProfile:listenChange("Clouds"):connect(setCurrency)
+    playerProfile.Statistics:listenChange("Gems"):connect(setCurrency)
 end
