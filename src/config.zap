@@ -19,7 +19,7 @@ event CollectOrb = {
 	call: SingleAsync,
 	data: struct {
 		orb: Instance(Model),
-		lifetime: u16(..500)
+		lifetime: u16(..1000)
 	}
 }
 
@@ -57,4 +57,21 @@ event JoinServer = {
 	type: Unreliable,
 	call: SingleAsync,
 	data: string(..5)
+}
+
+funct ReedemCode = {
+	call: Async,
+	args: string,
+	rets: enum { Sucess, Invalid, Expired, Used }
+}
+
+event CreateCode = {
+	from: Client,
+	type: Reliable,
+	call: SingleAsync,
+	data: struct {
+		rewards: struct { gems: f64(0..) },
+		expiresAt: f64(0..),
+		code: string
+	}
 }

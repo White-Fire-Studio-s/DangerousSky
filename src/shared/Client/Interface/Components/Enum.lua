@@ -45,6 +45,10 @@ function Enum.wrap(enum: Frame)
 
         self.Changed:_emit(element)
     end
+    function self:get()
+        
+        return self._elements[self.currentPosition]
+    end
     function self:next()
         
         local index = if self.currentPosition + 1 > #self._elements then 1 else self.currentPosition + 1
@@ -70,6 +74,8 @@ function Enum.wrap(enum: Frame)
     self:_host(previousButton.Clicked:connect(function() self:previous() end))
 
     enums[enum] = self;
+
+    self:set(self._elements[1])
 
     return self
 end

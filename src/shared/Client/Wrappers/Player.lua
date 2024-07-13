@@ -3,7 +3,6 @@ local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextChatService = game:GetService("TextChatService")
 
--->>
 --// Assets
 local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Client = ReplicatedStorage:WaitForChild("Client")
@@ -72,6 +71,10 @@ function Player.wrap(rbxPlayer: Player)
 
         humanoid.WalkSpeed = workspace:GetAttribute("roundSpeed")
     end)
+
+    if not self.isDeveloper then
+        rbxPlayer.PlayerGui.Main.Buttons2:Destroy()
+    end
 
     return self
 end

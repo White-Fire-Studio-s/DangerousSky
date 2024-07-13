@@ -134,11 +134,13 @@ RunService.Heartbeat:Connect(function(dt)
 	end
 end)
 
-local events = table.create(6)
-local event_queue: { [number]: { any } } = table.create(6)
+local events = table.create(8)
+local event_queue: { [number]: { any } } = table.create(8)
+local function_call_id = 0
 events[1] = {}
 event_queue[1] = {}
 event_queue[4] = {}
+event_queue[8] = table.create(255)
 reliable.OnClientEvent:Connect(function(buff, inst)
 	incoming_buff = buff
 	incoming_inst = inst
@@ -167,6 +169,24 @@ reliable.OnClientEvent:Connect(function(buff, inst)
 					warn(`[ZAP] {#event_queue[1]} events in queue for Teste. Did you forget to attach a listener?`)
 				end
 			end
+		elseif id == 8 then
+			local call_id = buffer.readu8(incoming_buff, read(1))
+			local value
+			value = {}
+			local enum_value = buffer.readu8(incoming_buff, read(1))
+			if enum_value == 0 then
+				value = "Sucess"
+			elseif enum_value == 1 then
+				value = "Invalid"
+			elseif enum_value == 2 then
+				value = "Expired"
+			elseif enum_value == 3 then
+				value = "Used"
+			else
+				error("Invalid enumerator")
+			end
+			task.spawn(event_queue[8][call_id], value)
+			event_queue[8][call_id] = nil
 		else
 			error("Unknown event id")
 		end
@@ -268,6 +288,29 @@ return {
 			load(saved)
 		end,
 	},
+	CreateCode = {
+		fire = function(value: ({
+			rewards: ({
+				gems: (number),
+			}),
+			expiresAt: (number),
+			code: (string),
+		}))
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, 7)
+			assert(value.rewards.gems >= 0)
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, value.rewards.gems)
+			assert(value.expiresAt >= 0)
+			alloc(8)
+			buffer.writef64(outgoing_buff, outgoing_apos, value.expiresAt)
+			local len = #value.code
+			alloc(2)
+			buffer.writeu16(outgoing_buff, outgoing_apos, len)
+			alloc(len)
+			buffer.writestring(outgoing_buff, outgoing_apos, value.code, len)
+		end,
+	},
 	Teste = {
 		on = function(callback: (({
 			id: (number),
@@ -298,6 +341,28 @@ return {
 			return function()
 				events[4] = nil
 			end
+		end,
+	},
+	ReedemCode = {
+		call = function(value: (string))
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, 8)
+			function_call_id += 1
+			function_call_id %= 256
+			if event_queue[8][function_call_id] then
+				function_call_id -= 1
+				error("Zap has more than 256 calls awaiting a response, and therefore this packet has been dropped")
+			end
+			alloc(1)
+			buffer.writeu8(outgoing_buff, outgoing_apos, function_call_id)
+			local len = #value
+			alloc(2)
+			buffer.writeu16(outgoing_buff, outgoing_apos, len)
+			alloc(len)
+			buffer.writestring(outgoing_buff, outgoing_apos, value, len)
+			event_queue[8][function_call_id] = coroutine.running()
+			local value = coroutine.yield()
+			return value
 		end,
 	},
 }

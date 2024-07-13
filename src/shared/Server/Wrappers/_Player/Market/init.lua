@@ -55,7 +55,7 @@ local function create(rbxPlayer: Player)
             }))
 
             table.clear(_G.Purchases)
-        until not task.wait(5)
+        until not task.wait(25)
     end)
 
     return self

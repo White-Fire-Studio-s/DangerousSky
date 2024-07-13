@@ -15,6 +15,7 @@ local Wrappers = Server:WaitForChild("Wrappers")
 local Wrapper = require(Packages.Wrapper)
 local Replicator = require(ServerStorage.Packages.Replicator)
 local Profile = require(Wrappers._Player.Profile)
+local Zap = require(ReplicatedStorage.Zap)
 
 --// Cache
 local orbs = setmetatable({}, { __mode = "k" })
@@ -58,6 +59,8 @@ function Orb.wrap(orb: Model)
 
         task.delay(.4, self.destroy, self)
 	end
+
+	Zap.CollectOrb.setCallback(client.Collect)
 
 	return self
 end

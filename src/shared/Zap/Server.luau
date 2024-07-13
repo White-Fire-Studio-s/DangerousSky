@@ -152,7 +152,7 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
-local events = table.create(6)
+local events = table.create(8)
 reliable.OnServerEvent:Connect(function(player, buff, inst)
 	incoming_buff = buff
 	incoming_inst = inst
@@ -192,6 +192,50 @@ reliable.OnServerEvent:Connect(function(player, buff, inst)
 			value = {}
 			if events[5] then
 				task.spawn(events[5], player, value)
+			end
+		elseif id == 7 then
+			local value
+			value = {}
+			value.rewards = {}
+			value.rewards.gems = buffer.readf64(incoming_buff, read(8))
+			assert(value.rewards.gems >= 0)
+			value.expiresAt = buffer.readf64(incoming_buff, read(8))
+			assert(value.expiresAt >= 0)
+			local len = buffer.readu16(incoming_buff, read(2))
+			value.code = buffer.readstring(incoming_buff, read(len), len)
+			if events[7] then
+				task.spawn(events[7], player, value)
+			end
+		elseif id == 8 then
+			local call_id = buffer.readu8(buff, read(1))
+			local value
+			local len = buffer.readu16(incoming_buff, read(2))
+			value = buffer.readstring(incoming_buff, read(len), len)
+			if events[8] then
+				task.spawn(function(player, call_id, value)
+					local rets = events[8](player, value)
+					load_player(player)
+					alloc(1)
+					buffer.writeu8(outgoing_buff, outgoing_apos, 8)
+					alloc(1)
+					buffer.writeu8(outgoing_buff, outgoing_apos, call_id)
+					if rets == "Sucess" then
+						alloc(1)
+						buffer.writeu8(outgoing_buff, outgoing_apos, 0)
+					elseif rets == "Invalid" then
+						alloc(1)
+						buffer.writeu8(outgoing_buff, outgoing_apos, 1)
+					elseif rets == "Expired" then
+						alloc(1)
+						buffer.writeu8(outgoing_buff, outgoing_apos, 2)
+					elseif rets == "Used" then
+						alloc(1)
+						buffer.writeu8(outgoing_buff, outgoing_apos, 3)
+					else
+						error("Invalid enumerator")
+					end
+					player_map[player] = save()
+				end, player, call_id, value)
 			end
 		else
 			error("Unknown event id")
@@ -514,6 +558,28 @@ return {
 			events[6] = callback
 			return function()
 				events[6] = nil
+			end
+		end,
+	},
+	CreateCode = {
+		setCallback = function(callback: (Player, ({
+			rewards: ({
+				gems: (number),
+			}),
+			expiresAt: (number),
+			code: (string),
+		})) -> ()): () -> ()
+			events[7] = callback
+			return function()
+				events[7] = nil
+			end
+		end,
+	},
+	ReedemCode = {
+		setCallback = function(callback: (Player, (string)) -> (("Sucess" | "Invalid" | "Expired" | "Used"))): () -> ()
+			events[8] = callback
+			return function()
+				events[8] = nil
 			end
 		end,
 	},

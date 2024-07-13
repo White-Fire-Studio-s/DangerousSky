@@ -1,6 +1,7 @@
 return {
     Scheme = {
         Gamepasses = {};
+        UsedCodes = {};
         Statistics = {
             Gems = 0;
             Deaths = 0;
