@@ -186,8 +186,6 @@ function MarketplaceService.ProcessReceipt(rawReceipt)
 
 	table.insert(_G.Purchases, `**{player.Name}** bought {playerProduct.name} (Product) **[{os.date("%X")}]**`)
 	
-	warn(_G.Purchases)
-
 	return Enum.ProductPurchaseDecision.PurchaseGranted
 end
 MarketplaceService.PromptProductPurchaseFinished:Connect(function(userId, productId, wasPurchased)

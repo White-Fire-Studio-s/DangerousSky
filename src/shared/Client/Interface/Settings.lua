@@ -7,6 +7,7 @@ local Workspace = game:GetService("Workspace")
 --// Imports
 local Slider = require(script.Parent.Components.Slider)
 local Enum = require(script.Parent.Components.Enum)
+local Button = require(script.Parent.Components.Button)
 local Profile = require(ReplicatedStorage.Client.Wrappers._Player.Profile)
 
 --// Assets
@@ -164,5 +165,30 @@ return function ()
         Lighting.ClockTime = if element == "Day" then 12 else 20
 
         playerSettings:invokeApplySettingAsync("DayClock", element)
+    end)
+
+    local resetSettings = Button.get(Settings.ResetSettings)
+    resetSettings.Clicked:connect(function()
+        musicSlider:set(1)
+        sfxSlider:set(1)
+
+        AmbientBrightnessSlider:set(0)
+        AmbientSaturationSlider:set(0)
+        AmbientContrastSlider:set(0)
+
+        FOVSlider:set(70)
+        
+        dayClockEnum:set("Day")
+
+        playerSettings:invokeApplySettingAsync("Music", 1)
+        playerSettings:invokeApplySettingAsync("SFX", 1)
+
+        playerSettings:invokeApplySettingAsync("AmbientBrightness", 0)
+        playerSettings:invokeApplySettingAsync("AmbientContrast", 0)
+        playerSettings:invokeApplySettingAsync("AmbientSaturation", 0)
+
+        playerSettings:invokeApplySettingAsync("FOV", 70)
+
+        playerSettings:invokeApplySettingAsync("DayClock", "Day")
     end)
 end

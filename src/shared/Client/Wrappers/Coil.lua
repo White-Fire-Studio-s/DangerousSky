@@ -137,7 +137,7 @@ function Coil.wrap(item: Tool)
 
         local rbxHumanoid =  rbxPlayer.Character.Humanoid
 
-        local speed = defaultSpeed + self.SpeedIncrease
+        local speed = 16 + self.SpeedIncrease
         local roundSpeed = workspace:GetAttribute("roundSpeed")
 
         rbxHumanoid.WalkSpeed = if roundSpeed > speed then roundSpeed else speed

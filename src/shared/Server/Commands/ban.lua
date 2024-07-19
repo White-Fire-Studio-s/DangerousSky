@@ -9,6 +9,7 @@ local Player = require(Wrappers.Player)
 local function canExecute(player)
     return player.isDeveloper 
         or player.isPrivateServerOwner 
+        or player.isOwner
 end
 
 
@@ -42,4 +43,6 @@ return function(rbxPlayer: Player, arguments: {any})
 
     local targetPlayer = Player.get(targetRbxPlayer)
     targetPlayer:blacklist(true)
+
+    return { TargetName = targetRbxPlayer.Name }
 end

@@ -20,7 +20,6 @@ function Coil.wrap(item: Tool, data)
     local rbxPlayer = item:FindFirstAncestorOfClass("Player")
         :: Player
 
-        warn(item, rbxPlayer)
     assert(rbxPlayer, `Coil need has a player as ancestor`)
 
     local self = wrapper(item, "Coil")

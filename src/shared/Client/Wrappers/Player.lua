@@ -66,13 +66,9 @@ function Player.wrap(rbxPlayer: Player)
         channel:DisplaySystemMessage(formatChatMessage(data))
     end)
 
-    rbxPlayer.CharacterAdded:Connect(function(character)
-        local humanoid = character:WaitForChild("Humanoid")
-
-        humanoid.WalkSpeed = workspace:GetAttribute("roundSpeed")
-    end)
-
-    if not self.isDeveloper then
+    if self.isDeveloper or self.isOwner then
+        rbxPlayer.PlayerGui.Main.Buttons2.Visible = true
+    else
         rbxPlayer.PlayerGui.Main.Buttons2:Destroy()
     end
 

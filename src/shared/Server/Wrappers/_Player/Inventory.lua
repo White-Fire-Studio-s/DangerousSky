@@ -49,7 +49,7 @@ function Inventory.wrap(holder: Player)
 		equippedItem.Parent = container
 	end
 	function self:hasItem(itemName)
-		local item = container:FindFirstChild(itemName) or holder.Character:FindFirstChild(itemName)
+		local item = holder.Backpack:FindFirstChild(itemName) or holder.Character:FindFirstChild(itemName)
 
 		return item ~= nil and item:IsA("Tool")
 	end

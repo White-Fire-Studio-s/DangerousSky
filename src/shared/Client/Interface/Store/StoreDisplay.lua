@@ -29,8 +29,6 @@ local function wrap(storeDisplay: Frame)
         storeDisplay.DisplayName.Text = storeItem.DisplayName
         storeDisplay.Price.Text = `$ {storeItem.DisplayPrice}`
 
-        warn(storeItem.DisplayPrice)
-
         self.Name = storeItem.DisplayName
         self.Type = storeItem.Type
         self.GamepassId = storeItem.GamepassId

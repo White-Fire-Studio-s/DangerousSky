@@ -45,7 +45,8 @@ function Leaderboard.wrap(rbxLeaderboard: Model)
         
         for rank, entry in leaders do
 
-            local display = rbxLeaderboard.Display.SurfaceGui.Scroll:FindFirstChild(rank) or self:createDisplay(rank)
+            local display = rbxLeaderboard.Display.SurfaceGui.Scroll:WaitForChild(tostring(rank), math.huge) 
+            
             local value = entry.value
             local playerName = Players:GetNameFromUserIdAsync(entry.key)
 
@@ -59,7 +60,7 @@ function Leaderboard.wrap(rbxLeaderboard: Model)
     function self:createDisplay(rank: number)
         
         local display: Frame = Display:Clone()
-        display.Name = rank
+        display.Name = tostring(rank)
         display.BackgroundTransparency = if rank % 2 == 0 then 1 else 0
         display.Parent = rbxLeaderboard.Display.SurfaceGui.Scroll
         display.LayoutOrder = rank
@@ -82,11 +83,11 @@ function Leaderboard.wrap(rbxLeaderboard: Model)
         display.Value.Text = "0"
     end
 
-    task.delay(10, function()
+    task.delay(2, function()
         repeat
 
             self:update()
-        until not task.wait(60)
+        until not task.wait(90)
     end)
 
     leaderboards[rbxLeaderboard] = self

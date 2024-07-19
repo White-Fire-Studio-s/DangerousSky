@@ -9,6 +9,7 @@ local Player = require(Wrappers.Player)
 local function canExecute(player)
     return player.isDeveloper 
         or player.isPrivateServerOwner 
+        or player.isOwner
 end
 
 return function(rbxPlayer: Player, arguments: {any})
@@ -25,5 +26,7 @@ return function(rbxPlayer: Player, arguments: {any})
     local userId = tonumber(arguments[1])
     if not userId then return end
 
-    Player.removeBlacklist(userId)  
+    Player.removeBlacklist(userId)
+    
+    return { TargetName = tostring(userId) }
 end

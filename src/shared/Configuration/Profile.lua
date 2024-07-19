@@ -2,6 +2,7 @@ return {
     Scheme = {
         Gamepasses = {};
         UsedCodes = {};
+        isNewbie = true;
         Statistics = {
             Gems = 0;
             Deaths = 0;
@@ -35,5 +36,5 @@ return {
             Blackhole = 0;
         }
     };
-    Mock = true
+    Mock = false
 }

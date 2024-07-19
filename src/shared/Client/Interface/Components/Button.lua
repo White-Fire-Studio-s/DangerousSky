@@ -99,6 +99,10 @@ function Button.wrap(button: TextButton | ImageButton)
         local X = Mouse.X
         local Y = Mouse.Y
 
+        if not button.AbsoluteSize then
+            return
+        end
+
         button.ClipsDescendants = true
 
 		local Circle = game.ReplicatedStorage.Assets:WaitForChild("Circle"):Clone()
@@ -112,7 +116,6 @@ function Button.wrap(button: TextButton | ImageButton)
 			Size = button.AbsoluteSize.X*1.5
 		elseif button.AbsoluteSize.X < button.AbsoluteSize.Y then
 			Size = button.AbsoluteSize.Y*1.5
-		elseif button.AbsoluteSize.X == button.AbsoluteSize.Y then																										Size = Button.AbsoluteSize.X*1.5
 		end
 
 		local Time = 0.5
@@ -122,6 +125,8 @@ function Button.wrap(button: TextButton | ImageButton)
 			task.wait(Time/10)
 		end
 		Circle:Destroy()
+
+        button.ClipsDescendants = false
     end
     
     --// Listeners

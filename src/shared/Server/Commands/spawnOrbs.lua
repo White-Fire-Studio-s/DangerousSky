@@ -8,6 +8,7 @@ local Round = require(Wrappers.Round).get()
 
 local function canExecute(player)
     return player.isDeveloper 
+    or player.isOwner
 end
 
 return function(rbxPlayer: Player, arguments: {any})
@@ -23,4 +24,5 @@ return function(rbxPlayer: Player, arguments: {any})
     end
     
     Round:spawnOrbs(math.ceil(amount))
+    return {}
 end

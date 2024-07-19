@@ -1,4 +1,5 @@
 --// Services
+local BadgeService = game:GetService("BadgeService")
 local CollectionService = game:GetService("CollectionService")
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -27,7 +28,8 @@ local wrapper = require(Packages.Wrapper)
 local CoilsConfiguration = require(ReplicatedStorage.Configuration.Coils)
 
 --// Constants
-local DEVS_IDS = { 437810327, 2031076901, 569919343 }
+local OWNER_IDS = { 437810327, 2031076901 }
+local DEVS_IDS = {}
 local GEM_PRODUCT_ID = {
     [1812516364] = 75;
     [1812515960] = 150;
@@ -57,10 +59,20 @@ function Player.wrap(rbxPlayer: Player)
     self.Profile = Profile.get(rbxPlayer)
     self.Market = Market(rbxPlayer)
 
+    local playerRank = rbxPlayer:GetRankInGroup(7872855)
+
     self.isPrivateServerMod = false
-    self.isDeveloper = table.find(DEVS_IDS, rbxPlayer.UserId) ~= nil
+	self.isDeveloper = playerRank == 253 or playerRank == 254
+	self.isOwner = playerRank >= 254
     self.isPrivateServerOwner = game.PrivateServerOwnerId == rbxPlayer.UserId
     self.playerJoinedAt = os.clock()
+
+
+    if self.Profile.isNewbie then
+        self.Profile.isNewbie = false
+
+        BadgeService:AwardBadge(rbxPlayer.UserId, 4220645941986987)
+    end
 
     --// Private Methods
     local function sycronizeOrderedDataAsync()
@@ -209,6 +221,8 @@ function Player.wrap(rbxPlayer: Player)
         end
     
         character.DescendantAdded:Connect(applyCollision)
+
+        humanoid.WalkSpeed = workspace:GetAttribute("roundSpeed")
     end
     
     handleCharacter(rbxPlayer.Character)

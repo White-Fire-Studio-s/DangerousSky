@@ -11,15 +11,18 @@ TextChatService.OnIncomingMessage = function(message: TextChatMessage)
 
     local rbxPlayer = Players:GetPlayerByUserId(message.TextSource.UserId)
 
-    if rbxPlayer:GetAttribute("isDeveloper") then
+	if rbxPlayer:GetAttribute("isOwner") then
+		
+		chatProperty.PrefixText = `<b><font color='rgb(63, 235, 255)'>[OWNER]</font></b> {message.PrefixText}`
+   	 elseif rbxPlayer:GetAttribute("isDeveloper") then
         
-        chatProperty.PrefixText = `<b><font color='rgb(255, 0, 0)'>[🔨]</font></b> {message.PrefixText}`
+		chatProperty.PrefixText = `<b><font color='rgb(255, 0, 104)'>[DEV]</font></b> {message.PrefixText}`
     elseif rbxPlayer:GetAttribute("isVIP") then
 
-        chatProperty.PrefixText = `<b><font color='rgb(255, 176, 0)'>[👑]</font></b> {message.PrefixText}`
+		chatProperty.PrefixText = `<b><font color='rgb(255, 236, 76)'>[VIP]</font></b> {message.PrefixText}`
     elseif rbxPlayer:GetAttribute("isDonator") then
 
-        chatProperty.PrefixText = `<b><font color='rgb(177, 229, 166)'>[💸]</font></b> {message.PrefixText}`
+		chatProperty.PrefixText = `<b><font color='rgb(165, 0, 180)'>[DONATOR]</font></b> {message.PrefixText}`
     else
         
         chatProperty.PrefixText = message.PrefixText

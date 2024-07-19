@@ -9,6 +9,7 @@ local Player = require(Wrappers.Player)
 local function canExecute(player)
     return player.isDeveloper 
         or player.isPrivateServerOwner 
+        or player.isOwner
 end
 
 
@@ -41,4 +42,6 @@ return function(rbxPlayer: Player, arguments: {any})
     end
 
     targetRbxPlayer:Kick("A private server moderator kicked you out")
+
+    return { TargetName = targetRbxPlayer.Name }
 end

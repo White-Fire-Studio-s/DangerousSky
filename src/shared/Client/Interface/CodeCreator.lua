@@ -26,12 +26,12 @@ return function ()
     Button.Clicked:connect(function()
 
         local code = CodeCreator.Main.Code.Text
-        if code == "" then return warn(1) end
+        if code == "" then return end
 
         local increase = TIMESTAMPS_INCREASE[Duration.currentPosition]
 
         local gems = CodeCreator.Main.Gems.Text
-        if not tonumber(gems) then return warn(2) end
+        if not tonumber(gems) then return end
 
         Zap.CreateCode.fire({
             rewards = { gems = tonumber(gems) };

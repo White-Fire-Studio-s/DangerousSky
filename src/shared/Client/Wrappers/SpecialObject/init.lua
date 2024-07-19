@@ -110,7 +110,7 @@ function SpecialObject.wrap(object: BasePart, kinds: {string})
 	end
 	function self:trait(kind: string)
 
-		if not TRAITS[kind] then return warn(kind, TRAITS) end
+		if not TRAITS[kind] then return end
 
 		TRAITS[kind](self)
 	end

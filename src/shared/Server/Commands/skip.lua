@@ -8,6 +8,7 @@ local function canExecute(player)
     return player.isDeveloper 
         or player.isPrivateServerOwner 
         or player.isPrivateServerMod
+        or player.isOwner
 end
 
 return function(rbxPlayer: Player, arguments: {any})
@@ -18,4 +19,6 @@ return function(rbxPlayer: Player, arguments: {any})
     end
 
     RoundContainer:SetAttribute("timer", 0)
+
+    return {}
 end
